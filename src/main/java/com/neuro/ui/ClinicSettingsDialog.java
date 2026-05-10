@@ -2,19 +2,21 @@ package com.neuro.ui;
 
 import com.neuro.config.ClinicConfig;
 import com.neuro.model.ClinicInfo;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 
 public class ClinicSettingsDialog extends JDialog {
-
+    private static final Logger logger = LoggerFactory.getLogger(ClinicSettingsDialog.class);
     private JTextField nameField;
     private JLabel logoLabel;
     private JLabel previewLabel;
     private String logoPath;
 
     public ClinicSettingsDialog() {
+        logger.info("Opening Clinic Settings dialog");
         setTitle("Clinic Settings");
         setSize(450, 350);
         setLocationRelativeTo(null);
@@ -63,71 +65,209 @@ public class ClinicSettingsDialog extends JDialog {
     }
 
     private void chooseLogo() {
-        JFileChooser chooser = new JFileChooser();
-        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
-                "Image Files (JPG, PNG, JPEG)", "jpg", "jpeg", "png"
-        ));
 
-        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+        logger.info("Logo upload initiated");
+
+        JFileChooser chooser = new JFileChooser();
+
+        chooser.setFileFilter(
+                new javax.swing.filechooser.FileNameExtensionFilter(
+                        "Image Files (JPG, PNG, JPEG)",
+                        "jpg", "jpeg", "png"
+                )
+        );
+
+        if (chooser.showOpenDialog(this)
+                == JFileChooser.APPROVE_OPTION) {
 
             File file = chooser.getSelectedFile();
-            String path = file.getAbsolutePath().toLowerCase();
 
-            // 🔴 Validation
-            if (!(path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".jpeg"))) {
+            logger.info(
+                    "User selected logo file={}",
+                    file.getAbsolutePath()
+            );
+
+            String path =
+                    file.getAbsolutePath().toLowerCase();
+
+            if (!(path.endsWith(".png")
+                    || path.endsWith(".jpg")
+                    || path.endsWith(".jpeg"))) {
+
+                logger.warn(
+                        "Invalid logo format selected={}",
+                        file.getName()
+                );
 
                 JOptionPane.showMessageDialog(
                         this,
-                        "❌ Invalid file selected!\nPlease choose PNG or JPG image.",
-                        "Invalid File",
-                        JOptionPane.ERROR_MESSAGE
+                        "Invalid image. Use PNG/JPG"
                 );
                 return;
             }
 
-            // ✅ Save path
-            logoPath = file.getAbsolutePath();
-            logoLabel.setText(file.getName());
+            try {
 
-            // ✅ Preview image
-            ImageIcon icon = new ImageIcon(logoPath);
-            Image img = icon.getImage().getScaledInstance(120, 60, Image.SCALE_SMOOTH);
-            previewLabel.setIcon(new ImageIcon(img));
+                logoPath = file.getAbsolutePath();
+
+                logoLabel.setText(file.getName());
+
+                ImageIcon icon =
+                        new ImageIcon(logoPath);
+
+                Image img =
+                        icon.getImage().getScaledInstance(
+                                120,
+                                60,
+                                Image.SCALE_SMOOTH
+                        );
+
+                previewLabel.setIcon(
+                        new ImageIcon(img)
+                );
+
+                logger.info(
+                        "Logo preview loaded successfully path={}",
+                        logoPath
+                );
+
+            } catch (Exception e) {
+
+                logger.error(
+                        "Failed loading logo preview",
+                        e
+                );
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Error loading image"
+                );
+            }
+
+        } else {
+
+            logger.debug(
+                    "Logo upload cancelled by user"
+            );
         }
     }
 
     private void save() {
+
         try {
-            ClinicInfo info = new ClinicInfo(
-                    nameField.getText(),
+
+            String clinicName =
+                    nameField.getText().trim();
+
+            if (clinicName.isEmpty()) {
+                logger.warn(
+                        "Save blocked: clinic name empty"
+                );
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Clinic name required"
+                );
+                return;
+            }
+
+            logger.info(
+                    "Saving clinic settings name={} logo={}",
+                    clinicName,
                     logoPath
             );
 
+            ClinicInfo info =
+                    new ClinicInfo(
+                            clinicName,
+                            logoPath
+                    );
+
             ClinicConfig.save(info);
 
-            JOptionPane.showMessageDialog(this, "✅ Saved Successfully!");
+            logger.info(
+                    "Clinic settings saved successfully"
+            );
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Saved Successfully!"
+            );
+
             dispose();
 
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "❌ Error saving");
+
+            logger.error(
+                    "Clinic settings save failed",
+                    e
+            );
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Error saving settings"
+            );
         }
     }
 
     private void loadExisting() {
-        ClinicInfo info = ClinicConfig.load();
 
-        if (info != null) {
-            nameField.setText(info.getName());
-            logoPath = info.getLogoPath();
+        try {
 
-            if (logoPath != null && !logoPath.isEmpty()) {
-                File file = new File(logoPath);
-                logoLabel.setText(file.getName());
+            logger.debug(
+                    "Loading existing clinic settings"
+            );
 
-                ImageIcon icon = new ImageIcon(logoPath);
-                Image img = icon.getImage().getScaledInstance(120, 60, Image.SCALE_SMOOTH);
-                previewLabel.setIcon(new ImageIcon(img));
+            ClinicInfo info =
+                    ClinicConfig.load();
+
+            if (info != null) {
+
+                nameField.setText(
+                        info.getName()
+                );
+
+                logoPath =
+                        info.getLogoPath();
+
+                logger.info(
+                        "Loaded clinic settings name={} logo={}",
+                        info.getName(),
+                        logoPath
+                );
+
+                if (logoPath != null
+                        && !logoPath.isEmpty()) {
+
+                    File file =
+                            new File(logoPath);
+
+                    logoLabel.setText(
+                            file.getName()
+                    );
+
+                    ImageIcon icon =
+                            new ImageIcon(logoPath);
+
+                    Image img =
+                            icon.getImage().getScaledInstance(
+                                    120,
+                                    60,
+                                    Image.SCALE_SMOOTH
+                            );
+
+                    previewLabel.setIcon(
+                            new ImageIcon(img)
+                    );
+                }
             }
+
+        } catch (Exception e) {
+
+            logger.error(
+                    "Failed loading clinic settings",
+                    e
+            );
         }
     }
 }

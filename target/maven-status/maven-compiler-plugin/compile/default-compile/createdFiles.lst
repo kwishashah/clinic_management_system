@@ -1,5 +1,5 @@
-com/neuro/ui/PatientHistoryFormMySQL$2.class
 com/neuro/db/DBConnection.class
+com/neuro/session/UserSession.class
 com/neuro/ui/SessionFormDialog.class
 com/neuro/ui/PatientForm.class
 com/neuro/model/Patient.class
@@ -12,7 +12,6 @@ com/neuro/ui/ClinicSettingsDialog.class
 com/neuro/license/LicenseManager.class
 com/neuro/license/LicenseInfo.class
 com/neuro/dao/PatientDAO.class
-com/neuro/ui/PatientHistoryFormMySQL$1.class
 com/neuro/license/LicenseDialog.class
 com/neuro/ui/PatientHistoryFormMySQL.class
 com/neuro/ui/PatientDetailsFrame.class

@@ -1,7 +1,8 @@
 package com.neuro.ui;
 
 import com.neuro.dao.UserDAO;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.*;
 
@@ -9,7 +10,8 @@ public class LoginFrame extends JFrame {
 
     private JTextField txtUsername;
     private JPasswordField txtPassword;
-
+    private static final Logger logger =
+            LoggerFactory.getLogger(LoginFrame.class);
     public LoginFrame() {
         setTitle("Clinic Login");
         setSize(450, 320);
@@ -64,28 +66,68 @@ public class LoginFrame extends JFrame {
     }
 
     private void login() {
+
         try {
+
             String username = txtUsername.getText().trim();
             String password = new String(txtPassword.getPassword());
+
+            // empty credentials
+            if(username.isEmpty() || password.isEmpty()){
+                logger.warn("Login attempted with empty credentials");
+                JOptionPane.showMessageDialog(this,"Enter username and password");
+                return;
+            }
+
+            // login attempt
+            logger.info("Login attempt for username={}", username);
 
             if (UserDAO.validateUser(username, password)) {
 
                 int userId = UserDAO.getUserId(username);
+
+                // successful login
+                logger.info(
+                        "Login successful userId={} username={}",
+                        userId,
+                        username
+                );
+
+                logger.debug(
+                        "Launching DoctorDashboard for userId={}",
+                        userId
+                );
+
+                // IMPORTANT: only once (you had it twice)
                 new DoctorDashboard(userId).setVisible(true);
 
-                new DoctorDashboard(userId).setVisible(true);
                 dispose();
-                System.out.println("Logged in userId = " + userId);
 
             } else {
-                JOptionPane.showMessageDialog(this, "Invalid credentials");
+
+                logger.warn(
+                        "Login failed for username={}",
+                        username
+                );
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Invalid credentials"
+                );
             }
 
-
         } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Login error: " + e.getMessage());
+
+            logger.error(
+                    "Login error for username={}",
+                    txtUsername.getText(),
+                    e
+            );
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Login error: " + e.getMessage()
+            );
         }
     }
-
 }

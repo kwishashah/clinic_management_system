@@ -1,12 +1,13 @@
 package com.neuro.ui;
 
 import com.neuro.dao.PatientDAO;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.*;
 
 public class PatientHistoryFormMySQL extends JFrame {
-
+    private static final Logger logger = LoggerFactory.getLogger(PatientHistoryFormMySQL.class);
     private JTextField txtName, txtMobile, txtAge, txtOccupation;
     private JTextField txtBloodGroup, txtHeight, txtWeight, txtDuration;
 
@@ -32,6 +33,8 @@ public class PatientHistoryFormMySQL extends JFrame {
     public PatientHistoryFormMySQL(int userId) {
 
         this.userId = userId;
+
+        logger.info("Opening Patient History Form for userId={}", userId);
 
         setTitle("Patient History Form");
         setSize(950, 750);
@@ -115,7 +118,7 @@ public class PatientHistoryFormMySQL extends JFrame {
                 "Rtov","Ltov","Dys","Const","Liv0","Mul0","Follic","Thia","B12","Nia"
         };
 
-        String[] scale = {"0","1","2","3","4","5"};
+        String[] scale = {"0","1","2","3","4"};
 
         for(int i=0;i<names.length;i++){
             painFields[i] = new JComboBox<>(scale);
@@ -163,61 +166,133 @@ public class PatientHistoryFormMySQL extends JFrame {
 
     // ================= SAVE =================
     private void saveData() {
+
         try {
 
-            Float height = txtHeight.getText().isEmpty()?null:Float.parseFloat(txtHeight.getText());
-            Float weight = txtWeight.getText().isEmpty()?null:Float.parseFloat(txtWeight.getText());
+            logger.info(
+                    "Saving patient started name={} mobile={} userId={}",
+                    txtName.getText(),
+                    txtMobile.getText(),
+                    userId
+            );
+
+            if(txtName.getText().trim().isEmpty()){
+                logger.warn("Save blocked: patient name empty");
+                JOptionPane.showMessageDialog(this,"Patient name required");
+                return;
+            }
+
+            Float height =
+                    txtHeight.getText().isEmpty()
+                            ? null
+                            : Float.parseFloat(txtHeight.getText());
+
+            Float weight =
+                    txtWeight.getText().isEmpty()
+                            ? null
+                            : Float.parseFloat(txtWeight.getText());
+
+            logger.debug(
+                    "Parsed vitals height={} weight={} bp={}",
+                    height,
+                    weight,
+                    txtBP.getText()
+            );
+
 
             StringBuilder pain = new StringBuilder();
+
             for (JComboBox<String> field : painFields) {
                 pain.append(field.getSelectedItem()).append(",");
             }
-            pain.append("L4=").append(left4th.getSelectedItem()).append(",");
-            pain.append("R4=").append(right4th.getSelectedItem());
+
+            pain.append("L4=")
+                    .append(left4th.getSelectedItem())
+                    .append(",");
+
+            pain.append("R4=")
+                    .append(right4th.getSelectedItem());
+
+            logger.debug("Pain points captured={}", pain);
+
 
             PatientDAO.savePatient(
                     txtName.getText(),
                     txtMobile.getText(),
-                    txtAge.getText().isEmpty()?null:Integer.parseInt(txtAge.getText()),
+                    txtAge.getText().isEmpty()
+                            ? null
+                            : Integer.parseInt(txtAge.getText()),
+
                     (String) cmbGender.getSelectedItem(),
                     (String) cmbMarital.getSelectedItem(),
+
                     txtAddress.getText(),
                     txtOccupation.getText(),
                     txtBloodGroup.getText(),
+
                     height,
                     weight,
+
                     txtDuration.getText(),
                     txtMainDisease.getText(),
                     txtComplications.getText(),
                     txtSymptoms.getText(),
+
                     pain.toString(),
+
                     "", "", "", "", "", "",
+
                     txtPreviousTreatment.getText(),
                     txtMedicines.getText(),
                     txtDetailedHistory.getText(),
                     txtExamination.getText(),
+
                     txtBP.getText(),
                     txtPulse.getText(),
                     txtO2.getText(),
                     txtTemp.getText(),
-                    userId,   // ✅ CORRECT
+
+                    userId,
+
                     txtReportPath.getText(),
                     "",
                     txtReportAnalysis.getText(),
                     txtRemarks.getText(),
-                    new java.sql.Timestamp(System.currentTimeMillis())
+
+                    new java.sql.Timestamp(
+                            System.currentTimeMillis()
+                    )
             );
 
-            System.out.println("Saving for userId = " + userId);
+            logger.info(
+                    "Patient saved successfully name={} userId={}",
+                    txtName.getText(),
+                    userId
+            );
 
-            JOptionPane.showMessageDialog(this, "Saved!");
+            JOptionPane.showMessageDialog(this,"Saved!");
             dispose();
 
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, e.getMessage());
+        }
+        catch(NumberFormatException e){
+            logger.warn("Invalid numeric input while saving patient", e);
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Invalid age/height/weight values"
+            );
+        }
+        catch(Exception e){
+            logger.error(
+                    "Patient save failed userId={}",
+                    userId,
+                    e
+            );
+            JOptionPane.showMessageDialog(
+                    this,
+                    e.getMessage()
+            );
         }
     }
-
     private JTextArea createArea() {
         JTextArea a = new JTextArea(3,20);
         a.setLineWrap(true);

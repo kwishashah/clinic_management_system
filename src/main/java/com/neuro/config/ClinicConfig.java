@@ -5,37 +5,145 @@ import com.neuro.model.ClinicInfo;
 import java.io.IOException;
 import java.nio.file.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ClinicConfig {
 
-    private static final Path CONFIG_FILE = Paths.get(
-            System.getProperty("user.home"), ".neuro", "clinic.cfg"
-    );
+    private static final Logger logger =
+            LoggerFactory.getLogger(ClinicConfig.class);
 
+    private static final Path CONFIG_FILE =
+            Paths.get(
+                    System.getProperty("user.home"),
+                    ".neuro",
+                    "clinic.cfg"
+            );
+
+
+    // ================= SAVE =================
     public static void save(ClinicInfo info) throws IOException {
-        Files.createDirectories(CONFIG_FILE.getParent());
 
-        String data = (info.getName() == null ? "" : info.getName())
-                + "|" + (info.getLogoPath() == null ? "" : info.getLogoPath());
+        try {
 
-        Files.writeString(CONFIG_FILE, data);
+            logger.info(
+                    "Saving clinic config to {}",
+                    CONFIG_FILE
+            );
+
+            Files.createDirectories(
+                    CONFIG_FILE.getParent()
+            );
+
+            logger.debug(
+                    "Config directory verified {}",
+                    CONFIG_FILE.getParent()
+            );
+
+            String data =
+                    (info.getName()==null
+                            ? ""
+                            : info.getName())
+
+                            + "|"
+
+                            + (info.getLogoPath()==null
+                            ? ""
+                            : info.getLogoPath());
+
+            Files.writeString(
+                    CONFIG_FILE,
+                    data
+            );
+
+            logger.info(
+                    "Clinic config saved successfully name={} logo={}",
+                    info.getName(),
+                    info.getLogoPath()
+            );
+
+        }
+        catch(IOException e){
+
+            logger.error(
+                    "Failed writing clinic config file",
+                    e
+            );
+
+            throw e;
+        }
     }
 
+
+
+    // ================= LOAD =================
     public static ClinicInfo load() {
+
         try {
-            if (!Files.exists(CONFIG_FILE)) return null;
 
-            String data = Files.readString(CONFIG_FILE).trim();
+            logger.debug(
+                    "Loading clinic config from {}",
+                    CONFIG_FILE
+            );
 
-            if (data.isEmpty()) return null;
+            if(!Files.exists(CONFIG_FILE)){
 
-            String[] parts = data.split("\\|", -1);
+                logger.info(
+                        "Clinic config file not found (first run)"
+                );
 
-            String name = parts.length > 0 ? parts[0] : "";
-            String logo = parts.length > 1 ? parts[1] : "";
+                return null;
+            }
 
-            return new ClinicInfo(name, logo);
+            String data =
+                    Files.readString(
+                            CONFIG_FILE
+                    ).trim();
 
-        } catch (Exception e) {
+            if(data.isEmpty()){
+
+                logger.warn(
+                        "Clinic config file empty"
+                );
+
+                return null;
+            }
+
+            String[] parts =
+                    data.split(
+                            "\\|",
+                            -1
+                    );
+
+            String name =
+                    parts.length>0
+                            ? parts[0]
+                            : "";
+
+            String logo =
+                    parts.length>1
+                            ? parts[1]
+                            : "";
+
+            logger.info(
+                    "Clinic config loaded name={} logo={}",
+                    name,
+                    logo
+            );
+
+            return new ClinicInfo(
+                    name,
+                    logo
+            );
+
+        }
+        catch(Exception e){
+
+            logger.error(
+                    "Failed loading clinic config",
+                    e
+            );
+
             return null;
         }
     }

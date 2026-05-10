@@ -20,10 +20,11 @@ import java.util.ArrayList;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.*;
 public class PatientDetailsFrame extends JFrame {
-
+    private static final Logger logger = LoggerFactory.getLogger(PatientDetailsFrame.class);
     private JTextArea textArea;
     private int patientId;
     private DoctorDashboard parentFrame;
@@ -36,7 +37,7 @@ public class PatientDetailsFrame extends JFrame {
 
         this.parentFrame = parentFrame;
         this.patientId = patientId;
-
+        logger.info("Opening PatientDetailsFrame for patientId={}", patientId);
         setTitle("Patient Details");
         setSize(900, 700);
         setLocationRelativeTo(null);
@@ -62,22 +63,33 @@ public class PatientDetailsFrame extends JFrame {
         JButton btnExportPDF = new JButton("🧾 Export PDF");
 
         btnBack.addActionListener(e -> {
+            logger.info("Returning to dashboard from patientId={}", patientId);
             parentFrame.setVisible(true);
             dispose();
         });
 
         btnAddSession.addActionListener(e -> {
+            logger.info(
+                    "Opening add-session dialog for patientId={}",
+                    patientId
+            );
             new SessionFormDialog(this, patientId, null).setVisible(true);
         });
 
         btnOpenReport.addActionListener(e -> {
             try {
                 if (!reportPath.isEmpty()) {
+                    logger.info("Opening report {} for patientId={}", reportPath, patientId
+                    );
                     Desktop.getDesktop().open(new java.io.File(reportPath));
                 } else {
+                    logger.warn("No report available for patientId={}", patientId
+                    );
                     JOptionPane.showMessageDialog(this, "No report available");
                 }
             } catch (Exception ex) {
+                logger.error("Failed opening report for patientId={}", patientId, ex
+                );
                 JOptionPane.showMessageDialog(this, "Cannot open file");
             }
         });
@@ -110,10 +122,18 @@ public class PatientDetailsFrame extends JFrame {
 
                     int row = sessionTable.getSelectedRow();
 
-                    if (row == -1) return;
-
+                    if (row == -1) {
+                        logger.warn(
+                                "Session double-click with no row selected"
+                        );
+                        return;
+                    }
                     int sessionId = (int) sessionModel.getValueAt(row, 0);
-
+                    logger.info(
+                            "Editing sessionId={} for patientId={}",
+                            sessionId,
+                            patientId
+                    );
                     new SessionFormDialog(
                             PatientDetailsFrame.this,
                             patientId,
@@ -146,17 +166,20 @@ public class PatientDetailsFrame extends JFrame {
     // ================= LOAD SESSIONS =================
     public void loadSessions() {
         try {
+            logger.info("Loading sessions for patientId={}", patientId
+            );
             sessionModel.setRowCount(0);
 
             var data = SessionDAO.getSessionsByPatient(patientId);
-
+            logger.info("Loaded {} sessions for patientId={}", data.size(), patientId
+            );
             for (var row : data) {
 
 //                String painData = ((String) row.get(4))
 //                        .replace(",", "\n")
 //                        .replace("->", " → ");
-                String painData = getShortPainPreview((String) row.get(4));
-
+                //String painData = getShortPainPreview((String) row.get(4));
+                String painData = formatPainData((String) row.get(4));
                 sessionModel.addRow(new Object[]{
                         row.get(0),
                         row.get(1),
@@ -168,13 +191,18 @@ public class PatientDetailsFrame extends JFrame {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+           // e.printStackTrace();
+
+            logger.error(
+                    "Failed loading sessions for patientId={}", patientId, e);
+
         }
     }
 
     // ================= LOAD PATIENT DETAILS =================
     private void loadPatientDetails() {
-
+        logger.info("Loading patient details for patientId={}", patientId
+        );
         String sql = "SELECT * FROM PatientHistory WHERE patient_id = ?";
 
         try (Connection con = DBConnection.getConnection();
@@ -184,7 +212,8 @@ public class PatientDetailsFrame extends JFrame {
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-
+                logger.info("Patient record found for patientId={}", patientId
+                );
                 StringBuilder sb = new StringBuilder();
 
                 sb.append("=========== PATIENT DETAILS ===========\n\n");
@@ -255,9 +284,16 @@ public class PatientDetailsFrame extends JFrame {
                 sb.append("Remarks: ").append(safe(rs.getString("remarks"))).append("\n");
 
                 textArea.setText(sb.toString());
+            }else{
+                logger.warn(
+                        "No patient found for patientId={}",
+                        patientId
+                );
             }
 
         } catch (Exception e) {
+            logger.error("Error loading patient details patientId={}", patientId, e
+            );
             JOptionPane.showMessageDialog(this, "Error loading details:\n" + e.getMessage());
         }
     }
@@ -298,19 +334,40 @@ public class PatientDetailsFrame extends JFrame {
             if (count == 2) break;
         }
 
-        if (count == 0) return "No Change";
+        if (count == 0) {
+            logger.debug(
+                    "Pain preview generated: No Change"
+            );
+            return "No Change";
+        }
+
+        logger.debug(
+                "Pain preview generated {}",
+                sb.toString()
+        );
 
         return sb.toString();
+
     }
     // ================= EXPORT PDF =================
 
     private void exportToPDF() {
-
+        logger.info("Exporting patient PDF for patientId={}", patientId
+        );
         try {
             JFileChooser chooser = new JFileChooser();
 
-            if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
+            //if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
+            if (chooser.showSaveDialog(this)
+                    != JFileChooser.APPROVE_OPTION) {
 
+                logger.debug(
+                        "PDF export cancelled by user for patientId={}",
+                        patientId
+                );
+
+                return;
+            }
             String path = chooser.getSelectedFile().getAbsolutePath() + ".pdf";
 
             try (PDDocument doc = new PDDocument()) {
@@ -329,47 +386,209 @@ public class PatientDetailsFrame extends JFrame {
                 float yPosition = yStart;
                 float width = page.getMediaBox().getWidth() - 2 * margin;
 
+
                 // ================= HEADER =================
+//                ClinicInfo info = ClinicConfig.load();
+//
+//                float headerY = 760;
+//
+//// Logo LEFT
+//                if (info != null
+//                        && info.getLogoPath() != null
+//                        && !info.getLogoPath().isEmpty()) {
+//
+//                    try {
+//
+//                        BufferedImage bufferedImage =
+//                                ImageIO.read(
+//                                        new File(
+//                                                info.getLogoPath()
+//                                        )
+//                                );
+//
+//                        if (bufferedImage != null) {
+//
+//                            PDImageXObject logo =
+//                                    LosslessFactory.createFromImage(
+//                                            doc,
+//                                            bufferedImage
+//                                    );
+//
+//                            content.drawImage(
+//                                    logo,
+//                                    50,     // left
+//                                    720,
+//                                    90,
+//                                    50
+//                            );
+//                        }
+//
+//                    } catch (Exception e) {
+//
+//                        logger.warn(
+//                                "Clinic logo could not be added to PDF",
+//                                e
+//                        );
+//                    }
+//                }
+//
+//
+//// Clinic name RIGHT
+//                content.beginText();
+//
+//                content.setFont(
+//                        PDType1Font.HELVETICA_BOLD,
+//                        18
+//                );
+//
+//                String clinicName =
+//                        (info != null
+//                                && info.getName()!=null
+//                                && !info.getName().isBlank())
+//                                ? info.getName()
+//                                : "Neurotherapy Clinic";
+//
+//                float textWidth =
+//                        PDType1Font.HELVETICA_BOLD
+//                                .getStringWidth(clinicName)
+//                                /1000 *18;
+//
+//                float rightX =
+//                        page.getMediaBox().getWidth()
+//                                - textWidth
+//                                - 50;
+//
+//                content.newLineAtOffset(
+//                        rightX,
+//                        headerY
+//                );
+//
+//                content.showText(
+//                        clinicName
+//                );
+//
+//                content.endText();
+//
+//
+//// separator line
+//                content.moveTo(
+//                        50,
+//                        700
+//                );
+//
+//                content.lineTo(
+//                        page.getMediaBox().getWidth()-50,
+//                        700
+//                );
+//
+//                content.stroke();
+//
+//
+//// Start body lower
+//                yPosition = 675;
+                // ================= CENTERED HEADER (LOGO + NAME INLINE) =================
                 ClinicInfo info = ClinicConfig.load();
 
-                // 🔹 Draw logo safely
-                if (info != null && info.getLogoPath() != null && !info.getLogoPath().isEmpty()) {
+                float pageWidth = page.getMediaBox().getWidth();
+
+                String clinicName =
+                        (info != null &&
+                                info.getName() != null &&
+                                !info.getName().isBlank())
+                                ? info.getName()
+                                : "Neurotherapy Clinic";
+
+// Sizes
+                float logoWidth = 60;
+                float logoHeight = 40;
+                float gap = 15;
+
+// text width
+                float textWidth =
+                        PDType1Font.HELVETICA_BOLD
+                                .getStringWidth(clinicName)
+                                /1000 * 18;
+
+// total width of logo + gap + text
+                float totalWidth =
+                        logoWidth + gap + textWidth;
+
+// centered starting x
+                float startX =
+                        (pageWidth - totalWidth) / 2;
+
+                float headerY = 735;
+
+
+// -------- Logo (LEFT) --------
+                if (info != null &&
+                        info.getLogoPath() != null &&
+                        !info.getLogoPath().isEmpty()) {
+
                     try {
-                        BufferedImage bufferedImage = ImageIO.read(new File(info.getLogoPath()));
+
+                        BufferedImage bufferedImage =
+                                ImageIO.read(
+                                        new File(info.getLogoPath())
+                                );
 
                         if (bufferedImage != null) {
-                            PDImageXObject logo = LosslessFactory.createFromImage(doc, bufferedImage);
 
-                            content.drawImage(logo, 400, 720, 100, 50);
+                            PDImageXObject logo =
+                                    LosslessFactory.createFromImage(
+                                            doc,
+                                            bufferedImage
+                                    );
+
+                            content.drawImage(
+                                    logo,
+                                    startX,
+                                    headerY - 10,
+                                    logoWidth,
+                                    logoHeight
+                            );
                         }
-                    } catch (Exception e) {
-                        System.out.println("❌ Logo failed: " + e.getMessage());
+
+                    } catch(Exception e){
+                        logger.warn(
+                                "Logo could not load",
+                                e
+                        );
                     }
                 }
 
-                // 🔹 Draw clinic name
+
+// -------- Clinic Name (RIGHT OF LOGO) --------
                 content.beginText();
-                content.setFont(PDType1Font.HELVETICA_BOLD, 16);
 
-                if (info != null && info.getName() != null && !info.getName().isEmpty()) {
+                content.setFont(
+                        PDType1Font.HELVETICA_BOLD,
+                        18
+                );
 
-                    float titleWidth = PDType1Font.HELVETICA_BOLD
-                            .getStringWidth(info.getName()) / 1000 * 16;
+                content.newLineAtOffset(
+                        startX + logoWidth + gap,
+                        headerY
+                );
 
-                    float centerX = (page.getMediaBox().getWidth() - titleWidth) / 2;
-
-                    content.newLineAtOffset(centerX, yStart);
-                    content.showText(info.getName());
-
-                } else {
-                    content.newLineAtOffset(margin, yStart);
-                    content.showText("Clinic");
-                }
+                content.showText(
+                        clinicName
+                );
 
                 content.endText();
 
-                // 🔹 Move below header
-                yPosition = yStart - 60;
+
+// -------- Divider --------
+                content.moveTo(50,690);
+                content.lineTo(
+                        pageWidth - 50,
+                        690
+                );
+                content.stroke();
+
+
+// Start content below header
+                yPosition = 665;
 
                 // ================= MAIN CONTENT =================
                 content.beginText();
@@ -384,6 +603,10 @@ public class PatientDetailsFrame extends JFrame {
                     for (String wrappedLine : wrapText(line, font, fontSize, width)) {
 
                         if (yPosition <= 50) {
+                            logger.debug(
+                                    "Adding additional PDF page for patientId={}",
+                                    patientId
+                            );
                             content.endText();
                             content.close();
 
@@ -411,12 +634,16 @@ public class PatientDetailsFrame extends JFrame {
                 content.close();
 
                 doc.save(path);
+                logger.info("PDF exported successfully {}", path
+                );
             }
 
             JOptionPane.showMessageDialog(this, "PDF Saved!");
 
         } catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
+            logger.error("PDF export failed for patientId={}", patientId, e
+            );
             JOptionPane.showMessageDialog(this, "Error creating PDF");
         }
     }

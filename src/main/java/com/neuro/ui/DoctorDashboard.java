@@ -4,7 +4,8 @@ import com.neuro.config.ClinicConfig;
 import com.neuro.dao.PatientDAO;
 import com.neuro.model.ClinicInfo;
 import com.neuro.session.UserSession;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -18,7 +19,7 @@ public class DoctorDashboard extends JFrame {
     private DefaultTableModel tableModel;
 
     private int userId;
-
+    private static final Logger logger = LoggerFactory.getLogger(DoctorDashboard.class);
     private JLabel lblLogo = new JLabel();
     private JLabel lblTitle = new JLabel();
 
@@ -26,7 +27,7 @@ public class DoctorDashboard extends JFrame {
 
         // ✅ SAFE SESSION HANDLING
         this.userId = (userId > 0) ? userId : UserSession.getUserId();
-
+        logger.info("DoctorDashboard opened for userId={}", this.userId);
         setTitle("Doctor Dashboard");
         setSize(1000, 600);
         setLocationRelativeTo(null);
@@ -130,12 +131,13 @@ public class DoctorDashboard extends JFrame {
         });
 
         loadAllPatients();
-        System.out.println("Dashboard userId = " + userId);
+        //System.out.println("Dashboard userId = " + userId);
+        logger.info("Dashboard initialized successfully for userId={}", userId);
     }
 
     // ================= OPEN FORM =================
     private void openPatientForm() {
-
+        logger.info("Opening patient registration form for userId={}", userId);
         PatientHistoryFormMySQL form = new PatientHistoryFormMySQL(userId);
 
         form.addWindowListener(new WindowAdapter() {
@@ -154,15 +156,20 @@ public class DoctorDashboard extends JFrame {
         tableModel.setRowCount(0);
 
         try {
+            logger.info("Loading all patients for userId={}", userId);
+
             List<Object[]> patients = PatientDAO.getAllPatients(userId);
 
             for (Object[] row : patients) {
                 tableModel.addRow(row);
             }
+            logger.info("Loaded {} patients into dashboard", patients.size()
+            );
 
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Error loading patients:\n" + ex.getMessage());
+            logger.error("Failed loading patients for userId={}", userId, ex
+            );
+            JOptionPane.showMessageDialog(this, "Error loading patients:\n" + ex.getMessage());
         }
     }
 
@@ -179,15 +186,20 @@ public class DoctorDashboard extends JFrame {
         tableModel.setRowCount(0);
 
         try {
+            logger.info("Searching patients for userId={} mobile={}", userId, mobile
+            );
             List<Object[]> patients = PatientDAO.searchPatientsByMobile(userId, mobile);
 
             for (Object[] row : patients) {
                 tableModel.addRow(row);
             }
+            logger.info("Search returned {} records", patients.size()
+            );
 
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Search error:\n" + ex.getMessage());
+            logger.error("Patient search failed for mobile={}", mobile, ex
+            );
+            JOptionPane.showMessageDialog(this, "Search error:\n" + ex.getMessage());
         }
     }
 
@@ -197,19 +209,23 @@ public class DoctorDashboard extends JFrame {
         int row = tblPatients.getSelectedRow();
 
         if (row == -1) {
+            logger.warn("View details attempted without selecting patient"
+            );
             JOptionPane.showMessageDialog(this, "Please select a patient.");
             return;
         }
 
         int patientId = (int) tableModel.getValueAt(row, 0);
-
+        logger.info("Opening patient details for patientId={}", patientId
+        );
         setVisible(false);
         new PatientDetailsFrame(this, patientId).setVisible(true);
     }
 
     // ================= LOGOUT =================
     private void logout() {
-
+        logger.info("Logout initiated by userId={}", userId
+        );
         int confirm = JOptionPane.showConfirmDialog(
                 this,
                 "Are you sure you want to logout?",
@@ -218,9 +234,17 @@ public class DoctorDashboard extends JFrame {
         );
 
         if (confirm == JOptionPane.YES_OPTION) {
+            logger.info("User {} logged out successfully", userId
+            );
             UserSession.clear();
             new LoginFrame().setVisible(true);
             dispose();
+        }
+        else {
+
+            logger.info("Logout cancelled by userId={}",
+                    userId
+            );
         }
     }
 
@@ -237,10 +261,12 @@ public class DoctorDashboard extends JFrame {
 
         if (info != null && info.getLogoPath() != null) {
             try {
+                logger.info("Clinic header refreshed");
                 ImageIcon icon = new ImageIcon(info.getLogoPath());
                 Image img = icon.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH);
                 lblLogo.setIcon(new ImageIcon(img));
             } catch (Exception e) {
+                logger.warn("Clinic logo load failed", e);
                 lblLogo.setIcon(null);
             }
         }

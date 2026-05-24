@@ -109,7 +109,57 @@
                     </archive>
                 </configuration>
             </plugin>
-            
+
+            <!-- yGuard obfuscation via antrun -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>obfuscate</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <taskdef name="yguard"
+                                         classname="com.yworks.yguard.YGuardTask">
+                                    <classpath>
+                                        <pathelement location="${project.basedir}/tools/yguard.jar"/>
+                                        <pathelement location="${project.basedir}/tools/asm-9.6.jar"/>
+                                    </classpath>
+                                </taskdef>
+
+                                <yguard>
+                                    <inoutpair in="${project.build.directory}/Dashboard.jar"
+                                               out="${project.build.directory}/Dashboard-obfuscated.jar"/>
+
+                                    <rename mainclass="com.neuro.application.NeuroApplication"
+                                            logfile="${project.build.directory}/yguard-rename.log">
+                                        <keep>
+                                            <class name="com.neuro.application.NeuroApplication"
+                                                   methods="public" fields="none"/>
+                                            <class implements="java.lang.Throwable"
+                                                   methods="public" fields="public"/>
+                                            <class name="com.neuro.model.ClinicInfo"
+                                                   methods="public" fields="public"/>
+                                            <class name="com.neuro.model.Patient"
+                                                   methods="public" fields="public"/>
+                                            <class name="com.neuro.model.PatientColumns"
+                                                   methods="public" fields="public"/>
+                                        </keep>
+                                    </rename>
+                                </yguard>
+
+                                <echo message="Obfuscated JAR: ${project.build.directory}/Dashboard-obfuscated.jar"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
 </project>

@@ -71,8 +71,8 @@ public class PatientDAO {
                             + "reports, media, patient_story, remarks, created_at"
                             + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-            try (Connection con = DBConnection.getConnection();
-                 PreparedStatement ps = con.prepareStatement(sql)) {
+            Connection con = DBConnection.getConnection();
+            try (PreparedStatement ps = con.prepareStatement(sql)) {
 
                 ps.setString(1, name);
                 ps.setString(2, mobile);
@@ -154,8 +154,8 @@ public class PatientDAO {
                         "WHERE user_id=? " +
                         "ORDER BY patient_id DESC";
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        Connection con = DBConnection.getConnection();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
 
             logger.info(
                     "Fetching patients for userId={}",
@@ -211,8 +211,8 @@ public class PatientDAO {
                         "FROM PatientHistory " +
                         "WHERE user_id=? AND mobile_number LIKE ?";
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        Connection con = DBConnection.getConnection();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
 
             logger.info(
                     "Searching patients userId={} mobileLike={}",

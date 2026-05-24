@@ -205,8 +205,9 @@ public class PatientDetailsFrame extends JFrame {
         );
         String sql = "SELECT * FROM PatientHistory WHERE patient_id = ?";
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try {
+            Connection con = DBConnection.getConnection();
+            PreparedStatement ps = con.prepareStatement(sql);
 
             ps.setInt(1, patientId);
             ResultSet rs = ps.executeQuery();

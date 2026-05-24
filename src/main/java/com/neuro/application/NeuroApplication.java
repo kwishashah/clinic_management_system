@@ -1,6 +1,7 @@
 package com.neuro.application;
 
 import com.neuro.dao.UserDAO;
+import com.neuro.db.DBConnection;
 import com.neuro.license.LicenseManager;
 import com.neuro.ui.LoginFrame;
 import com.neuro.ui.SignupFrame;
@@ -41,6 +42,8 @@ public class NeuroApplication {
                     "License invalid or expired. Application will exit.");
             System.exit(0);
         }
+
+        Runtime.getRuntime().addShutdownHook(new Thread(DBConnection::close));
 
         // START UI
         SwingUtilities.invokeLater(() -> {

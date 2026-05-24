@@ -21,69 +21,44 @@ public class UserDAO {
         String sql =
                 "SELECT password FROM users WHERE TRIM(username)=?";
 
-        try(
-                Connection conn=
-                        DBConnection.getConnection();
-
-                PreparedStatement stmt=
-                        conn.prepareStatement(sql)
-        ){
+        Connection conn = DBConnection.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             logger.info(
                     "Login validation requested for username={}",
                     username
             );
 
-            stmt.setString(
-                    1,
-                    username.trim()
-            );
+            stmt.setString(1, username.trim());
 
-            try(
-                    ResultSet rs=
-                            stmt.executeQuery()
-            ){
+            try (ResultSet rs = stmt.executeQuery()) {
 
-                if(rs.next()){
+                if (rs.next()) {
 
                     logger.debug(
                             "User found in database username={}",
                             username
                     );
 
-                    String storedHash =
-                            rs.getString("password");
+                    String storedHash = rs.getString("password");
 
-                    boolean valid =
-                            PasswordUtil.verify(
-                                    password,
-                                    storedHash
-                            );
+                    boolean valid = PasswordUtil.verify(password, storedHash);
 
-                    if(valid){
-                        logger.info(
-                                "Login success username={}",
-                                username
-                        );
-                    }else{
-                        logger.warn(
-                                "Invalid password username={}",
-                                username
-                        );
+                    if (valid) {
+                        logger.info("Login success username={}", username);
+                    } else {
+                        logger.warn("Invalid password username={}", username);
                     }
 
                     return valid;
                 }
             }
 
-            logger.warn(
-                    "Login failed user not found username={}",
-                    username
-            );
+            logger.warn("Login failed user not found username={}", username);
 
             return false;
 
-        }catch(Exception e){
+        } catch (Exception e) {
 
             logger.error(
                     "Login validation failed username={}",
@@ -101,34 +76,19 @@ public class UserDAO {
 
         String sql="SELECT COUNT(*) FROM users";
 
-        try(
-                Connection con=
-                        DBConnection.getConnection();
+        Connection con = DBConnection.getConnection();
+        try (PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
 
-                PreparedStatement ps=
-                        con.prepareStatement(sql);
+            boolean exists = rs.next() && rs.getInt(1) > 0;
 
-                ResultSet rs=
-                        ps.executeQuery()
-        ){
-
-            boolean exists =
-                    rs.next() &&
-                            rs.getInt(1)>0;
-
-            logger.info(
-                    "Has any user check result={}",
-                    exists
-            );
+            logger.info("Has any user check result={}", exists);
 
             return exists;
 
-        }catch(Exception e){
+        } catch (Exception e) {
 
-            logger.error(
-                    "Failed checking existing users",
-                    e
-            );
+            logger.error("Failed checking existing users", e);
 
             return false;
         }
@@ -152,42 +112,21 @@ public class UserDAO {
         String sql=
                 "INSERT INTO users(username,password) VALUES (?,?)";
 
-        try(
-                Connection conn=
-                        DBConnection.getConnection();
+        Connection conn = DBConnection.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-                PreparedStatement stmt=
-                        conn.prepareStatement(sql)
-        ){
+            stmt.setString(1, username.trim());
+            stmt.setString(2, hashedPassword);
 
-            stmt.setString(
-                    1,
-                    username.trim()
-            );
+            int rows = stmt.executeUpdate();
 
-            stmt.setString(
-                    2,
-                    hashedPassword
-            );
+            logger.info("User created username={} rows={}", username, rows);
 
-            int rows=
-                    stmt.executeUpdate();
+            return rows > 0;
 
-            logger.info(
-                    "User created username={} rows={}",
-                    username,
-                    rows
-            );
+        } catch (SQLException e) {
 
-            return rows>0;
-
-        }catch(SQLException e){
-
-            logger.error(
-                    "User creation failed username={}",
-                    username,
-                    e
-            );
+            logger.error("User creation failed username={}", username, e);
 
             throw e;
         }
@@ -202,26 +141,14 @@ public class UserDAO {
         String sql=
                 "SELECT 1 FROM users WHERE TRIM(username)=?";
 
-        try(
-                Connection con=
-                        DBConnection.getConnection();
+        Connection con = DBConnection.getConnection();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
 
-                PreparedStatement ps=
-                        con.prepareStatement(sql)
-        ){
+            ps.setString(1, username.trim());
 
-            ps.setString(
-                    1,
-                    username.trim()
-            );
+            try (ResultSet rs = ps.executeQuery()) {
 
-            try(
-                    ResultSet rs=
-                            ps.executeQuery()
-            ){
-
-                boolean exists =
-                        rs.next();
+                boolean exists = rs.next();
 
                 logger.info(
                         "Username exists check username={} result={}",
@@ -232,7 +159,7 @@ public class UserDAO {
                 return exists;
             }
 
-        }catch(Exception e){
+        } catch (Exception e) {
 
             logger.error(
                     "User existence check failed username={}",
@@ -257,71 +184,30 @@ public class UserDAO {
         String select=
                 "SELECT username,password FROM users";
 
-        try(
-                Connection conn=
-                        DBConnection.getConnection();
+        Connection conn = DBConnection.getConnection();
+        try (PreparedStatement ps = conn.prepareStatement(select);
+             ResultSet rs = ps.executeQuery()) {
 
-                PreparedStatement ps=
-                        conn.prepareStatement(select);
+            while (rs.next()) {
 
-                ResultSet rs=
-                        ps.executeQuery()
-        ){
+                String username = rs.getString("username");
+                String plainPassword = rs.getString("password");
 
-            while(rs.next()){
-
-                String username=
-                        rs.getString(
-                                "username"
-                        );
-
-                String plainPassword=
-                        rs.getString(
-                                "password"
-                        );
-
-                if(
-                        plainPassword!=null &&
-                                plainPassword.length()>20
-                ){
-
-                    logger.debug(
-                            "Skipping already hashed user={}",
-                            username
-                    );
-
+                if (plainPassword != null && plainPassword.length() > 20) {
+                    logger.debug("Skipping already hashed user={}", username);
                     continue;
                 }
 
-                String hashed=
-                        PasswordUtil.hash(
-                                plainPassword
-                        );
+                String hashed = PasswordUtil.hash(plainPassword);
 
-                String update=
-                        "UPDATE users SET password=? WHERE username=?";
+                String update = "UPDATE users SET password=? WHERE username=?";
 
-                try(
-                        PreparedStatement up=
-                                conn.prepareStatement(update)
-                ){
-
-                    up.setString(
-                            1,
-                            hashed
-                    );
-
-                    up.setString(
-                            2,
-                            username
-                    );
-
+                try (PreparedStatement up = conn.prepareStatement(update)) {
+                    up.setString(1, hashed);
+                    up.setString(2, username);
                     up.executeUpdate();
 
-                    logger.info(
-                            "Encrypted password for user={}",
-                            username
-                    );
+                    logger.info("Encrypted password for user={}", username);
                 }
             }
         }
@@ -341,30 +227,16 @@ public class UserDAO {
         String sql=
                 "SELECT user_id FROM users WHERE TRIM(username)=?";
 
-        try(
-                Connection conn=
-                        DBConnection.getConnection();
+        Connection conn = DBConnection.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-                PreparedStatement stmt=
-                        conn.prepareStatement(sql)
-        ){
+            stmt.setString(1, username.trim());
 
-            stmt.setString(
-                    1,
-                    username.trim()
-            );
+            try (ResultSet rs = stmt.executeQuery()) {
 
-            try(
-                    ResultSet rs=
-                            stmt.executeQuery()
-            ){
+                if (rs.next()) {
 
-                if(rs.next()){
-
-                    int userId=
-                            rs.getInt(
-                                    "user_id"
-                            );
+                    int userId = rs.getInt("user_id");
 
                     logger.info(
                             "Resolved userId={} for username={}",
@@ -376,20 +248,13 @@ public class UserDAO {
                 }
             }
 
-            logger.warn(
-                    "No userId found for username={}",
-                    username
-            );
+            logger.warn("No userId found for username={}", username);
 
             return -1;
 
-        }catch(Exception e){
+        } catch (Exception e) {
 
-            logger.error(
-                    "getUserId failed username={}",
-                    username,
-                    e
-            );
+            logger.error("getUserId failed username={}", username, e);
 
             throw e;
         }

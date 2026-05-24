@@ -1,61 +1,61 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project name="NeuroApp" default="run" basedir=".">
+<project name="NeuroApp" default="obfuscate" basedir=".">
 
-    <!-- ===== PATHS ===== -->
-    <property name="src.dir" value="src"/>
-    <property name="build.dir" value="build"/>
-    <property name="classes.dir" value="${build.dir}/classes"/>
+    <property name="main.class" value="com.neuro.application.NeuroApplication"/>
     <property name="dist.dir" value="dist"/>
-    <property name="lib.dir" value="lib"/>
-    <property name="main.class" value="com.neuro.ui.PatientHistoryFormMySQL"/>
-
-    <!-- ===== CLASSPATH ===== -->g
-    <path id="classpath">
-        <fileset dir="${lib.dir}" includes="*.jar"/>
-    </path>
+    <property name="tools.dir" value="tools"/>
+    <property name="target.dir" value="target"/>
+    <property name="input.jar" value="${target.dir}/Dashboard.jar"/>
+    <property name="obfuscated.jar" value="${dist.dir}/NeuroApp-obfuscated.jar"/>
 
     <!-- ===== CLEAN ===== -->
     <target name="clean">
-        <delete dir="${build.dir}"/>
         <delete dir="${dist.dir}"/>
     </target>
 
-    <!-- ===== COMPILE ===== -->
-    <target name="compile">
-        <mkdir dir="${classes.dir}"/>
-        <javac srcdir="${src.dir}" destdir="${classes.dir}" includeantruntime="false">
-            <classpath refid="classpath"/>
-        </javac>
+    <!-- ===== MAVEN BUILD (fat JAR) ===== -->
+    <target name="maven-package">
+        <exec executable="mvn" failonerror="true">
+            <arg value="clean"/>
+            <arg value="package"/>
+            <arg value="-q"/>
+            <arg value="-DskipTests"/>
+        </exec>
     </target>
 
-    <!-- ===== COPY LIBS ===== -->
-    <target name="copy-libs">
-        <mkdir dir="${dist.dir}/lib"/>
-        <copy todir="${dist.dir}/lib">
-            <fileset dir="${lib.dir}" includes="*.jar"/>
-        </copy>
-    </target>
-
-    <!-- ===== CREATE JAR ===== -->
-    <target name="jar" depends="compile, copy-libs">
+    <!-- ===== OBFUSCATE WITH yGUARD ===== -->
+    <target name="obfuscate" depends="maven-package">
         <mkdir dir="${dist.dir}"/>
 
-        <jar destfile="${dist.dir}/NeuroApp.jar" basedir="${classes.dir}">
-            <manifest>
-                <attribute name="Main-Class" value="${main.class}"/>
-                <attribute name="Class-Path" value="lib/"/>
-            </manifest>
-        </jar>
+        <taskdef name="yguard"
+                 classname="com.yworks.yguard.YGuardTask">
+            <classpath>
+                <pathelement location="${tools.dir}/yguard.jar"/>
+                <pathelement location="${tools.dir}/asm-9.6.jar"/>
+            </classpath>
+        </taskdef>
+
+        <yguard>
+            <inoutpair in="${input.jar}" out="${obfuscated.jar}"/>
+
+            <rename mainclass="${main.class}" logfile="${dist.dir}/yguard-rename.log">
+                <keep>
+                    <class name="${main.class}" methods="public" fields="none"/>
+                    <class implements="java.lang.Throwable" methods="public" fields="public"/>
+                    <class name="com.neuro.model.ClinicInfo" methods="public" fields="public"/>
+                    <class name="com.neuro.model.Patient" methods="public" fields="public"/>
+                    <class name="com.neuro.model.PatientColumns" methods="public" fields="public"/>
+                </keep>
+            </rename>
+        </yguard>
+
+        <echo message="Obfuscated JAR created: ${obfuscated.jar}"/>
     </target>
 
     <!-- ===== RUN ===== -->
-    <target name="run" depends="jar">
-        <java jar="${dist.dir}/NeuroApp.jar" fork="true">
-            <classpath>
-                <fileset dir="${dist.dir}/lib" includes="*.jar"/>
-            </classpath>
-        </java>
+    <target name="run" depends="obfuscate">
+        <java jar="${obfuscated.jar}" fork="true"/>
     </target>
 
 </project>

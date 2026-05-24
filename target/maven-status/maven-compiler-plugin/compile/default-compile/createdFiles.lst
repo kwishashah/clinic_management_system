@@ -1,4 +1,5 @@
 com/neuro/db/DBConnection.class
+com/neuro/exceptions/DatabaseException.class
 com/neuro/session/UserSession.class
 com/neuro/ui/SessionFormDialog.class
 com/neuro/ui/PatientForm.class

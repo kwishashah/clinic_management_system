@@ -39,11 +39,8 @@ public class SessionDAO {
             ORDER BY session_number ASC
         """;
 
-        try (
-                Connection con = DBConnection.getConnection();
-                PreparedStatement ps =
-                        con.prepareStatement(sql)
-        ) {
+        Connection con = DBConnection.getConnection();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, patientId);
 
@@ -110,11 +107,8 @@ public class SessionDAO {
                         "FROM NeurotherapySessions " +
                         "WHERE patient_id=?";
 
-        try (
-                Connection con = DBConnection.getConnection();
-                PreparedStatement ps =
-                        con.prepareStatement(sql)
-        ) {
+        Connection con = DBConnection.getConnection();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, patientId);
 
@@ -206,17 +200,8 @@ public class SessionDAO {
         """;
 
 
-        try (
-                Connection con =
-                        DBConnection.getConnection();
-
-                PreparedStatement ps =
-                        con.prepareStatement(sql)
-        ) {
-
-            logger.debug(
-                    "Executing session insert..."
-            );
+        Connection con = DBConnection.getConnection();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, patientId);
             ps.setInt(2, sessionNo);
@@ -277,13 +262,8 @@ public class SessionDAO {
             WHERE session_id=?
         """;
 
-        try(
-                Connection con =
-                        DBConnection.getConnection();
-
-                PreparedStatement ps =
-                        con.prepareStatement(sql)
-        ) {
+        Connection con = DBConnection.getConnection();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, sessionNo);
             ps.setDate(2, date);

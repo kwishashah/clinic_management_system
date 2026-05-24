@@ -2,19 +2,19 @@ package com.neuro.db;
 
 import com.neuro.exceptions.DatabaseException;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
-import java.io.InputStream;
-import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class DBConnection {
-
-    private static final String PROPERTIES_FILE = "db.properties";
 
     private static final Logger logger =
             LoggerFactory.getLogger(DBConnection.class);
@@ -31,18 +31,22 @@ public class DBConnection {
             logger.warn("Error checking connection state, will reconnect", e);
         }
 
+        File jarDir;
+        try {
+            jarDir = new File(DBConnection.class.getProtectionDomain()
+                    .getCodeSource().getLocation().toURI()).getParentFile();
+        } catch (URISyntaxException e) {
+            throw new DatabaseException("Cannot determine JAR location", e);
+        }
+
+        File propsFile = new File(jarDir, "db.properties");
+        if (!propsFile.exists()) {
+            throw new DatabaseException("db.properties not found at: " + propsFile.getAbsolutePath());
+        }
+
         Properties props = new Properties();
-
-        try (InputStream in = DBConnection.class
-                .getClassLoader()
-                .getResourceAsStream(PROPERTIES_FILE)) {
-
-            if (in == null) {
-                throw new DatabaseException("db.properties not found in classpath");
-            }
-
+        try (FileInputStream in = new FileInputStream(propsFile)) {
             props.load(in);
-
         } catch (IOException e) {
             throw new DatabaseException("Error loading db.properties", e);
         }
@@ -51,36 +55,16 @@ public class DBConnection {
         String user = props.getProperty("db.username");
         String pass = props.getProperty("db.password");
 
-        if (url == null || user == null) {
-            throw new DatabaseException("Missing DB configuration in db.properties");
-        }
-
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
         } catch (ClassNotFoundException e) {
             throw new DatabaseException("MySQL Driver not found", e);
         }
 
-        if (!url.contains("useSSL")) {
-            if (url.contains("?")) {
-                url += "&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
-            } else {
-                url += "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
-            }
-        }
-
         try {
-            long start = System.currentTimeMillis();
-
             connection = DriverManager.getConnection(url, user, pass);
-
-            logger.info(
-                    "Database connection established in {} ms",
-                    System.currentTimeMillis() - start
-            );
-
+            logger.info("Database connected");
             return connection;
-
         } catch (SQLException e) {
             throw new DatabaseException("Database connection failed", e);
         }

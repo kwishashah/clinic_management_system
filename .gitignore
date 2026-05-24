@@ -2,6 +2,7 @@
 out/
 *.class
 *.jar
+!tools/yguard.jar
 
 # IDE / editor files
 *.iml

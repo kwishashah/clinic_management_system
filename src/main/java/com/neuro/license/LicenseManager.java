@@ -16,6 +16,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Enumeration;
 import java.time.format.DateTimeFormatter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 public class LicenseManager {
 
     private LicenseManager() {}
@@ -30,6 +32,32 @@ public class LicenseManager {
     private static final Path TRIAL_FILE = Paths.get(
             System.getProperty("user.home"), ".neuro", "trial.dat"
     );
+
+    private static void log(String message) {
+        try {
+
+            Path logFile = Paths.get(
+                    System.getProperty("user.home"),
+                    ".neuro",
+                    "license.log"
+            );
+
+            Files.createDirectories(logFile.getParent());
+
+            Files.writeString(
+                    logFile,
+                    java.time.LocalDateTime.now()
+                            + " : "
+                            + message
+                            + System.lineSeparator(),
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.APPEND
+            );
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     // ================= EXTERNAL DATE =================
     public static LocalDate getTrustedDate() {
@@ -78,36 +106,61 @@ public class LicenseManager {
     }
     // ================= MACHINE ID =================
     public static String getMachineIdentifier() {
+
+        String os =
+                System.getProperty("os.name").toLowerCase();
+
         try {
-            Enumeration<NetworkInterface> networks = NetworkInterface.getNetworkInterfaces();
 
-            while (networks.hasMoreElements()) {
-                NetworkInterface network = networks.nextElement();
+            // ================= MACOS =================
+            if (os.contains("mac")) {
+                Process process = Runtime.getRuntime().exec(
+                        new String[]{
+                                "system_profiler",
+                                "SPHardwareDataType"
+                        }
+                );
 
-                if (network.isLoopback() || network.isVirtual() || !network.isUp())
-                    continue;
-
-                String name = network.getName().toLowerCase();
-
-                if (!(name.contains("en0") || name.contains("eth0") || name.contains("wlan")))
-                    continue;
-
-                byte[] mac = network.getHardwareAddress();
-
-                if (mac != null && mac.length > 0) {
-                    StringBuilder sb = new StringBuilder();
-                    for (byte b : mac) {
-                        sb.append(String.format("%02X", b));
+                BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    line = line.trim();
+                    System.out.println(line);
+                    if (line.toLowerCase().contains("serial")) {
+                        String uuid =
+                                line.split(":")[1].trim();
+                        log("Mac Serial Number: " + uuid);
+                        return uuid;
                     }
-                    return sb.toString();
+                }
+            }
+
+            // ================= WINDOWS / FALLBACK =================
+            Process process = Runtime.getRuntime().exec("reg query HKLM\\SOFTWARE\\Microsoft\\Cryptography /v MachineGuid");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                System.out.println(line);
+                if (line.toLowerCase().contains("serial")) {
+                    String uuid =
+                            line.split(":")[1].trim();
+                    log("Mac Serial Number: " + uuid);
+                    return uuid;
                 }
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+
+            log("Machine ID error: "
+                    + e.getMessage());
         }
 
         return "UNKNOWN_MACHINE";
+    }
+
+    public static void main(String[] args) {
+        System.out.println(getMachineIdentifier());
     }
 
     // ================= VALIDATE LICENSE =================

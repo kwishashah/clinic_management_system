@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Created-By: Maven JAR Plugin 3.4.2
+Build-Jdk-Spec: 25
+Class-Path: mysql-connector-j-8.0.33.jar protobuf-java-3.21.9.jar pdfbox
+ -2.0.29.jar fontbox-2.0.29.jar commons-logging-1.2.jar jbcrypt-0.4.jar 
+ slf4j-api-2.0.9.jar logback-classic-1.4.11.jar logback-core-1.4.11.jar
+Main-Class: com.yourpackage.FirstMainClass
+

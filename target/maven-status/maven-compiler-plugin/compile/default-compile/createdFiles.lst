@@ -13,8 +13,11 @@ com/neuro/ui/ClinicSettingsDialog.class
 com/neuro/license/LicenseManager.class
 com/neuro/license/LicenseInfo.class
 com/neuro/dao/PatientDAO.class
+com/neuro/license/LicenseLauncher.class
+com/neuro/ui/PatientHistoryFormMySQL$1.class
 com/neuro/license/LicenseDialog.class
 com/neuro/ui/PatientHistoryFormMySQL.class
+com/neuro/license/LicenseGenerator.class
 com/neuro/ui/PatientDetailsFrame.class
 com/neuro/util/PasswordUtil.class
 com/neuro/dao/SessionDAO.class

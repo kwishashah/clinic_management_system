@@ -4,6 +4,7 @@
 /Users/kwisha/Downloads/Neurotherapy-feature-pdf-export/src/main/java/com/neuro/model/PatientColumns.java
 /Users/kwisha/Downloads/Neurotherapy-feature-pdf-export/src/main/java/com/neuro/exceptions/DatabaseException.java
 /Users/kwisha/Downloads/Neurotherapy-feature-pdf-export/src/main/java/com/neuro/ui/ClinicSettingsDialog.java
+/Users/kwisha/Downloads/Neurotherapy-feature-pdf-export/src/main/java/com/neuro/license/LicenseLauncher.java
 /Users/kwisha/Downloads/Neurotherapy-feature-pdf-export/src/main/java/com/neuro/exceptions/LicenceException.java
 /Users/kwisha/Downloads/Neurotherapy-feature-pdf-export/src/main/java/com/neuro/config/ClinicConfig.java
 /Users/kwisha/Downloads/Neurotherapy-feature-pdf-export/src/main/java/com/neuro/db/DBConnection.java
@@ -13,6 +14,7 @@
 /Users/kwisha/Downloads/Neurotherapy-feature-pdf-export/src/main/java/com/neuro/ui/LoginFrame.java
 /Users/kwisha/Downloads/Neurotherapy-feature-pdf-export/src/main/java/com/neuro/ui/PatientForm.java
 /Users/kwisha/Downloads/Neurotherapy-feature-pdf-export/src/main/java/com/neuro/license/LicenseDialog.java
+/Users/kwisha/Downloads/Neurotherapy-feature-pdf-export/src/main/java/com/neuro/license/LicenseGenerator.java
 /Users/kwisha/Downloads/Neurotherapy-feature-pdf-export/src/main/java/com/neuro/util/PasswordUtil.java
 /Users/kwisha/Downloads/Neurotherapy-feature-pdf-export/src/main/java/com/neuro/ui/SessionFormDialog.java
 /Users/kwisha/Downloads/Neurotherapy-feature-pdf-export/src/main/java/com/neuro/license/LicenseInfo.java

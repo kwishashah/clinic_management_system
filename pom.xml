@@ -113,18 +113,64 @@
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.4.2</version>
-                <configuration>
-                    <!-- Give your first JAR a custom name here -->
-                    <finalName>licensesdk</finalName>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <mainClass>com.yourpackage.FirstMainClass</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.0</version>
+
+                <executions>
+
+                    <execution>
+                        <id>license-sdk</id>
+
+                        <phase>package</phase>
+
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+
+                        <configuration>
+
+                            <finalName>licensesdk</finalName>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <artifactSet>
+                                <includes>
+                                    <include>${project.groupId}:${project.artifactId}</include>
+                                </includes>
+                            </artifactSet>
+
+                            <filters>
+
+                                <filter>
+
+                                    <artifact>${project.groupId}:${project.artifactId}</artifact>
+
+                                    <includes>
+                                        <include>com/neuro/license/**</include>
+                                        <include>com/neuro/exceptions/LicenceException.class</include>
+                                    </includes>
+
+                                </filter>
+
+                            </filters>
+
+                            <transformers>
+
+                                <transformer implementation=
+                                                     "org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+
+                                    <mainClass>
+                                        com.neuro.license.LicenseLauncher
+                                    </mainClass>
+
+                                </transformer>
+
+                            </transformers>
+
+                        </configuration>
+
+                    </execution>
+
+                </executions>
+
             </plugin>
 
             <!-- yGuard obfuscation via antrun -->

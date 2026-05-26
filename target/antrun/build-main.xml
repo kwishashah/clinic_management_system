@@ -8,7 +8,7 @@
       </classpath>
     </taskdef>
     <yguard>
-      <inoutpair in="/Users/kwisha/Desktop/Neurotherapy-feature-pdf-export/target/Dashboard.jar" out="/Users/kwisha/Desktop/Neurotherapy-feature-pdf-export/target/Dashboard-1.1.0-20260526-165234.jar" />
+      <inoutpair in="/Users/kwisha/Desktop/Neurotherapy-feature-pdf-export/target/Dashboard.jar" out="/Users/kwisha/Desktop/Neurotherapy-feature-pdf-export/target/Dashboard-1.1.0-20260526-172453.jar" />
       <rename mainclass="com.neuro.application.NeuroApplication" logfile="/Users/kwisha/Desktop/Neurotherapy-feature-pdf-export/target/yguard-rename.log">
         <keep>
           <class methods="public" name="com.neuro.application.NeuroApplication" fields="none" />
@@ -26,6 +26,6 @@
         </keep>
       </rename>
     </yguard>
-    <echo message="Release JAR: /Users/kwisha/Desktop/Neurotherapy-feature-pdf-export/target/Dashboard-1.1.0-20260526-165234.jar" />
+    <echo message="Release JAR: /Users/kwisha/Desktop/Neurotherapy-feature-pdf-export/target/Dashboard-1.1.0-20260526-172453.jar" />
   </target>
 </project>

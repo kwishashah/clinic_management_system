@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="maven-antrun-" default="main">
+  <target name="main">
+    <taskdef classname="com.yworks.yguard.YGuardTask" name="yguard">
+      <classpath>
+        <pathelement location="/Users/kwisha/Downloads/Neurotherapy-feature-pdf-export/tools/yguard.jar" />
+        <pathelement location="/Users/kwisha/Downloads/Neurotherapy-feature-pdf-export/tools/asm-9.6.jar" />
+      </classpath>
+    </taskdef>
+    <yguard>
+      <inoutpair in="/Users/kwisha/Downloads/Neurotherapy-feature-pdf-export/target/Dashboard.jar" out="/Users/kwisha/Downloads/Neurotherapy-feature-pdf-export/target/Dashboard-1.1.0-20260525-180729.jar" />
+      <rename mainclass="com.neuro.application.NeuroApplication" logfile="/Users/kwisha/Downloads/Neurotherapy-feature-pdf-export/target/yguard-rename.log">
+        <keep>
+          <class methods="public" name="com.neuro.application.NeuroApplication" fields="none" />
+          <class implements="java.lang.Throwable" methods="public" fields="public" />
+          <class methods="public" name="com.neuro.model.ClinicInfo" fields="public" />
+          <class methods="public" name="com.neuro.model.Patient" fields="public" />
+          <class methods="public" name="com.neuro.model.PatientColumns" fields="public" />
+        </keep>
+      </rename>
+    </yguard>
+    <echo message="Release JAR: /Users/kwisha/Downloads/Neurotherapy-feature-pdf-export/target/Dashboard-1.1.0-20260525-180729.jar" />
+  </target>
+</project>

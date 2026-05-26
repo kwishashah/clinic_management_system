@@ -11,7 +11,8 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Properties;
-
+import java.nio.file.Files;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,13 +63,16 @@ public class DBConnection {
         String pass = props.getProperty("db.password");
 
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
+            Class<?> aClass = Class.forName("com.mysql.cj.jdbc.Driver");
+            System.out.println("JDBC Driver is loaded successfully.");
         } catch (ClassNotFoundException e) {
             throw new DatabaseException("MySQL Driver not found", e);
         }
 
         try {
-            connection = DriverManager.getConnection(url, user, pass);
+
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/clinic", user, pass);
+            //connection = DriverManager.getConnection(url, user, pass);
             logger.info("Database connected");
             return connection;
         } catch (SQLException e) {

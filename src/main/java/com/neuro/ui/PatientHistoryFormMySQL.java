@@ -5,6 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 public class PatientHistoryFormMySQL extends JFrame {
     private static final Logger logger = LoggerFactory.getLogger(PatientHistoryFormMySQL.class);
@@ -114,8 +116,8 @@ public class PatientHistoryFormMySQL extends JFrame {
         JPanel painPanel = new JPanel(new GridLayout(0,2));
 
         String[] names = {
-                "Pan","Gas","Gast","WD","Gal","Spl","Liv","Mu",
-                "Rtov","Ltov","Dys","Const","Liv0","Mul0","Follic","Thia","B12","Nia"
+                "Pan","Gas","GasI","WD","Gal","Spl","Liv","Mu",
+                "Rtov","Ltov","Dys","Const","Liv0","Mu0","Folic","Thia","B12","Nia"
         };
 
         String[] scale = {"0","1","2","3","4"};
@@ -153,7 +155,42 @@ public class PatientHistoryFormMySQL extends JFrame {
         y = addRow(panel, gbc, y, "Report Analysis", txtReportAnalysis);
         y = addRow(panel, gbc, y, "Allergy", txtAllergy);
         y = addRow(panel, gbc, y, "Remarks", txtRemarks);
+        enableEnterFocus(txtName);
+        enableEnterFocus(txtMobile);
+        enableEnterFocus(txtAge);
 
+        enableEnterFocus(cmbGender);
+        enableEnterFocus(cmbMarital);
+
+        enableEnterFocus(txtAddress);
+
+        enableEnterFocus(txtOccupation);
+        enableEnterFocus(txtBloodGroup);
+
+        enableEnterFocus(txtHeight);
+        enableEnterFocus(txtWeight);
+
+        enableEnterFocus(txtDuration);
+
+        enableEnterFocus(txtMainDisease);
+        enableEnterFocus(txtComplications);
+        enableEnterFocus(txtSymptoms);
+
+        enableEnterFocus(txtPreviousTreatment);
+        enableEnterFocus(txtMedicines);
+
+        enableEnterFocus(txtDetailedHistory);
+        enableEnterFocus(txtExamination);
+
+        enableEnterFocus(txtReportAnalysis);
+
+        enableEnterFocus(txtAllergy);
+        enableEnterFocus(txtRemarks);
+
+        enableEnterFocus(txtBP);
+        enableEnterFocus(txtPulse);
+        enableEnterFocus(txtO2);
+        enableEnterFocus(txtTemp);
         // ===== SAVE BUTTON =====
         JButton btnSave = new JButton("Save");
         btnSave.addActionListener(e -> saveData());
@@ -162,6 +199,47 @@ public class PatientHistoryFormMySQL extends JFrame {
         gbc.gridy = y;
         gbc.gridwidth = 2;
         panel.add(btnSave, gbc);
+    }
+    private void enableEnterFocus(Component component) {
+
+        // JTextField + JComboBox
+        if (component instanceof JTextField ||
+                component instanceof JComboBox) {
+
+            if (component instanceof JTextField textField) {
+
+                textField.addActionListener(
+                        e -> textField.transferFocus()
+                );
+            }
+
+            if (component instanceof JComboBox<?> comboBox) {
+
+                comboBox.addActionListener(
+                        e -> comboBox.transferFocus()
+                );
+            }
+        }
+
+        // JTextArea special handling
+        if (component instanceof JTextArea area) {
+
+            area.setFocusTraversalKeysEnabled(false);
+
+            area.addKeyListener(new KeyAdapter() {
+
+                @Override
+                public void keyPressed(KeyEvent e) {
+
+                    if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+
+                        e.consume();
+
+                        area.transferFocus();
+                    }
+                }
+            });
+        }
     }
 
     // ================= SAVE =================

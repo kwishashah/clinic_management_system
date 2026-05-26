@@ -31,11 +31,15 @@ public class SessionFormDialog extends JDialog {
     @SuppressWarnings("unchecked")
     private JComboBox<String>[] afterFields =
             new JComboBox[18];
+    private JComboBox<String> left4thBefore;
+    private JComboBox<String> left4thAfter;
 
+    private JComboBox<String> right4thBefore;
+    private JComboBox<String> right4thAfter;
     private static final String[] PAIN_NAMES = {
-            "Pan","Gas","Gast","WD","Gal","Spl","Liv","Mu",
+            "Pan","Gas","GasI","WD","Gal","Spl","Liv","Mu",
             "Rtov","Ltov","Dys","Const",
-            "Liv0","Mul0","Follic","Thia","B12","Nia"
+            "Liv0","Mu0","Folic","Thia","B12","Nia"
     };
 
     private static final String[] SCALE = {
@@ -144,6 +148,11 @@ public class SessionFormDialog extends JDialog {
         painPanel.add(new JLabel("Pain"));
         painPanel.add(new JLabel("Before"));
         painPanel.add(new JLabel("After"));
+        left4thBefore = new JComboBox<>(SCALE);
+        left4thAfter = new JComboBox<>(SCALE);
+
+        right4thBefore = new JComboBox<>(SCALE);
+        right4thAfter = new JComboBox<>(SCALE);
 
         for(int i=0;i<PAIN_NAMES.length;i++){
 
@@ -165,7 +174,13 @@ public class SessionFormDialog extends JDialog {
                     afterFields[i]
             );
         }
+        painPanel.add(new JLabel("Left 4th"));
+        painPanel.add(left4thBefore);
+        painPanel.add(left4thAfter);
 
+        painPanel.add(new JLabel("Right 4th"));
+        painPanel.add(right4thBefore);
+        painPanel.add(right4thAfter);
         mainPanel.add(
                 new JScrollPane(painPanel),
                 BorderLayout.CENTER
@@ -270,26 +285,26 @@ public class SessionFormDialog extends JDialog {
                     if(
                             painData != null &&
                                     !painData.isEmpty()
-                    ){
+                    ) {
 
                         String[] pairs =
                                 painData.split(",");
 
-                        for(
-                                int i=0;
-                                i<pairs.length &&
-                                        i<beforeFields.length;
+                        for (
+                                int i = 0;
+                                i < pairs.length &&
+                                        i < beforeFields.length;
                                 i++
-                        ){
+                        ) {
 
-                            if(
+                            if (
                                     pairs[i].contains("->")
-                            ){
+                            ) {
 
-                                String[] vals=
+                                String[] vals =
                                         pairs[i].split("->");
 
-                                if(vals.length==2){
+                                if (vals.length == 2) {
                                     beforeFields[i]
                                             .setSelectedItem(
                                                     vals[0]
@@ -307,6 +322,37 @@ public class SessionFormDialog extends JDialog {
                                 "Pain values loaded for sessionId={}",
                                 sessionId
                         );
+
+                        for (String pair : pairs) {
+
+                            if (pair.startsWith("L4=")) {
+
+                                String value =
+                                        pair.replace("L4=", "");
+
+                                String[] vals =
+                                        value.split("->");
+
+                                if (vals.length == 2) {
+
+                                    left4thBefore.setSelectedItem(vals[0]);
+                                    left4thAfter.setSelectedItem(vals[1]);
+                                }
+                            } else if (pair.startsWith("R4=")) {
+
+                                String value =
+                                        pair.replace("R4=", "");
+
+                                String[] vals =
+                                        value.split("->");
+
+                                if (vals.length == 2) {
+
+                                    right4thBefore.setSelectedItem(vals[0]);
+                                    right4thAfter.setSelectedItem(vals[1]);
+                                }
+                            }
+                        }
                     }
 
                     break;
@@ -359,6 +405,15 @@ public class SessionFormDialog extends JDialog {
                 "Built pain data {}",
                 sb.toString()
         );
+        sb.append(",L4=")
+                .append(left4thBefore.getSelectedItem())
+                .append("->")
+                .append(left4thAfter.getSelectedItem());
+
+        sb.append(",R4=")
+                .append(right4thBefore.getSelectedItem())
+                .append("->")
+                .append(right4thAfter.getSelectedItem());
 
         return sb.toString();
     }

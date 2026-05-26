@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+?xml version="1.0" encoding="UTF-8"?>
 
 <project name="NeuroApp" default="obfuscate" basedir=".">
 
@@ -52,6 +52,54 @@
 
         <echo message="Obfuscated JAR created: ${obfuscated.jar}"/>
     </target>
+
+    <target name="obfuscate" depends="maven-package">
+        <mkdir dir="${dist.dir}"/>
+
+        <taskdef name="yguard"
+                 classname="com.yworks.yguard.YGuardTask">
+            <classpath>
+                <pathelement location="${tools.dir}/yguard.jar"/>
+                <pathelement location="${tools.dir}/asm-9.6.jar"/>
+            </classpath>
+        </taskdef>
+
+        <yguard>
+            <inoutpair in="${input.jar}" out="${obfuscated.jar}"/>
+
+            <rename mainclass="${main.class}" logfile="${dist.dir}/yguard-rename.log">
+                <keep>
+                    <class name="${main.class}" methods="public" fields="none"/>
+                    <class implements="java.lang.Throwable" methods="public" fields="public"/>
+                    <class name="com.neuro.model.ClinicInfo" methods="public" fields="public"/>
+                    <class name="com.neuro.model.Patient" methods="public" fields="public"/>
+                    <class name="com.neuro.model.PatientColumns" methods="public" fields="public"/>
+                </keep>
+            </rename>
+        </yguard>
+
+        <echo message="Obfuscated JAR created: ${obfuscated.jar}"/>
+    </target>
+
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                ...
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <main-class
+                        </manifest>
+                    </archive>
+                </configuration>
+                ...
+            </plugin>
+        </plugins>
+    </build>
 
     <!-- ===== RUN ===== -->
     <target name="run" depends="obfuscate">

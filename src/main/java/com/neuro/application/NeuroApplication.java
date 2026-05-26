@@ -12,17 +12,7 @@ import java.awt.datatransfer.StringSelection;
 
 public class NeuroApplication {
 
-    public static void clearClipboard() {
-        try {
-            Toolkit.getDefaultToolkit()
-                    .getSystemClipboard()
-                    .setContents(new StringSelection(""), null);
-        } catch (Exception ignored) {}
-    }
-
     public static void main(String[] args) {
-
-        clearClipboard();
 
         // Machine ID mode
         if (args.length > 0 && args[0].equalsIgnoreCase("--machine-id")) {

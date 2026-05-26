@@ -230,6 +230,13 @@
                                                    methods="public" fields="public"/>
                                             <class name="com.neuro.model.PatientColumns"
                                                    methods="public" fields="public"/>
+                                            <class classes="private" methods="private" fields="private">
+                                                <patternset>
+                                                    <include name="com.mysql.**"/>
+                                                    <include name="org.slf4j.**"/>
+                                                    <include name="org.apache.logging.log4j.**"/>
+                                                </patternset>
+                                            </class>
                                         </keep>
                                     </rename>
                                 </yguard>

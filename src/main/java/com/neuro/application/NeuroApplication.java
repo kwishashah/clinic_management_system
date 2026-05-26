@@ -46,14 +46,13 @@ public class NeuroApplication {
         SwingUtilities.invokeLater(() -> {
             boolean hasAnyUser = UserDAO.hasAnyUser();
             if (hasAnyUser) {
-                logger.info("User already exists -> {}", valid);
-                com.neuro.ui.LoginFrame loginFrame = new LoginFrame();
-                loginFrame.setVisible(true);
+                logger.info("User already exists, opening LoginFrame");
+                new LoginFrame().setVisible(true);
             } else {
-                logger.info("User does not exist -> {}", valid);
+                logger.info("No user found, opening SignupFrame");
                 new SignupFrame().setVisible(true);
             }
         });
-        logger.info("Application Exited");
+        logger.info("Main thread finished UI bootstrap");
     }
 }

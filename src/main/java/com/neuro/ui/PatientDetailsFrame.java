@@ -1,30 +1,36 @@
+/*
+ * Copyright (c) 2026. All rights reserved. contact kwisha.shah2004 for more details.
+ */
 package com.neuro.ui;
 
-import com.neuro.db.DBConnection;
-import com.neuro.dao.SessionDAO;
-import com.neuro.model.ClinicInfo;
-import org.apache.pdfbox.pdmodel.*;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
-import org.apache.pdfbox.pdmodel.font.PDFont;
+import com.neuro.app.AppContext;
 import com.neuro.config.ClinicConfig;
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
+import com.neuro.repo.queries.SqlQueries;
+import com.neuro.db.DBConnection;
+import com.neuro.model.ClinicInfo;
+import com.neuro.repo.SessionRepository;
 import java.awt.*;
 import java.awt.Desktop;
+import java.awt.image.BufferedImage;
+import java.io.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import java.util.List;
 import java.util.ArrayList;
-import java.awt.image.BufferedImage;
+import java.util.List;
 import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.pdfbox.pdmodel.*;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import java.io.*;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+
 public class PatientDetailsFrame extends JFrame {
-    private static final Logger logger = LoggerFactory.getLogger(PatientDetailsFrame.class);
+    private static final Logger logger = LogManager.getLogger(PatientDetailsFrame.class);
     private JTextArea textArea;
     private int patientId;
     private DoctorDashboard parentFrame;
@@ -33,10 +39,15 @@ public class PatientDetailsFrame extends JFrame {
     private JTable sessionTable;
     private DefaultTableModel sessionModel;
 
-    public PatientDetailsFrame(DoctorDashboard parentFrame, int patientId) {
+    private final AppContext context;
+    private final SessionRepository sessionRepo;
+
+    public PatientDetailsFrame(DoctorDashboard parentFrame, int patientId, AppContext context) {
 
         this.parentFrame = parentFrame;
         this.patientId = patientId;
+        this.context = context;
+        this.sessionRepo = context.sessionRepo();
         logger.info("Opening PatientDetailsFrame for patientId={}", patientId);
         setTitle("Patient Details");
         setSize(900, 700);
@@ -69,27 +80,21 @@ public class PatientDetailsFrame extends JFrame {
         });
 
         btnAddSession.addActionListener(e -> {
-            logger.info(
-                    "Opening add-session dialog for patientId={}",
-                    patientId
-            );
-            new SessionFormDialog(this, patientId, null).setVisible(true);
+            logger.info("Opening add-session dialog for patientId={}", patientId);
+            new SessionFormDialog(this, patientId, null, context).setVisible(true);
         });
 
         btnOpenReport.addActionListener(e -> {
             try {
                 if (!reportPath.isEmpty()) {
-                    logger.info("Opening report {} for patientId={}", reportPath, patientId
-                    );
+                    logger.info("Opening report {} for patientId={}", reportPath, patientId);
                     Desktop.getDesktop().open(new java.io.File(reportPath));
                 } else {
-                    logger.warn("No report available for patientId={}", patientId
-                    );
+                    logger.warn("No report available for patientId={}", patientId);
                     JOptionPane.showMessageDialog(this, "No report available");
                 }
             } catch (Exception ex) {
-                logger.error("Failed opening report for patientId={}", patientId, ex
-                );
+                logger.error("Failed opening report for patientId={}", patientId, ex);
                 JOptionPane.showMessageDialog(this, "Cannot open file");
             }
         });
@@ -102,9 +107,7 @@ public class PatientDetailsFrame extends JFrame {
         buttonPanel.add(btnExportPDF);
 
         // ================= TABLE =================
-        String[] columns = {
-                "ID", "Session No", "Date", "Treatment", "Pain Data", "Summary"
-        };
+        String[] columns = {"ID", "Session No", "Date", "Treatment", "Pain Data", "Summary"};
 
         sessionModel = new DefaultTableModel(columns, 0);
         sessionTable = new JTable(sessionModel);
@@ -123,22 +126,12 @@ public class PatientDetailsFrame extends JFrame {
                     int row = sessionTable.getSelectedRow();
 
                     if (row == -1) {
-                        logger.warn(
-                                "Session double-click with no row selected"
-                        );
+                        logger.warn("Session double-click with no row selected");
                         return;
                     }
                     int sessionId = (int) sessionModel.getValueAt(row, 0);
-                    logger.info(
-                            "Editing sessionId={} for patientId={}",
-                            sessionId,
-                            patientId
-                    );
-                    new SessionFormDialog(
-                            PatientDetailsFrame.this,
-                            patientId,
-                            sessionId
-                    ).setVisible(true);
+                    logger.info("Editing sessionId={} for patientId={}", sessionId, patientId);
+                    new SessionFormDialog(PatientDetailsFrame.this, patientId, sessionId, context).setVisible(true);
                 }
             }
         });
@@ -148,11 +141,7 @@ public class PatientDetailsFrame extends JFrame {
         topPanel.add(buttonPanel, BorderLayout.SOUTH);
 
         // ================= SPLIT =================
-        JSplitPane splitPane = new JSplitPane(
-                JSplitPane.VERTICAL_SPLIT,
-                topPanel,
-                tableScroll
-        );
+        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, topPanel, tableScroll);
 
         splitPane.setDividerLocation(400);
 
@@ -166,44 +155,33 @@ public class PatientDetailsFrame extends JFrame {
     // ================= LOAD SESSIONS =================
     public void loadSessions() {
         try {
-            logger.info("Loading sessions for patientId={}", patientId
-            );
+            logger.info("Loading sessions for patientId={}", patientId);
             sessionModel.setRowCount(0);
 
-            var data = SessionDAO.getSessionsByPatient(patientId);
-            logger.info("Loaded {} sessions for patientId={}", data.size(), patientId
-            );
+            var data = sessionRepo.getSessionsByPatient(patientId);
+            logger.info("Loaded {} sessions for patientId={}", data.size(), patientId);
             for (var row : data) {
 
-//                String painData = ((String) row.get(4))
-//                        .replace(",", "\n")
-//                        .replace("->", " → ");
-                //String painData = getShortPainPreview((String) row.get(4));
+                //                String painData = ((String) row.get(4))
+                //                        .replace(",", "\n")
+                //                        .replace("->", " → ");
+                // String painData = getShortPainPreview((String) row.get(4));
                 String painData = formatPainData((String) row.get(4));
-                sessionModel.addRow(new Object[]{
-                        row.get(0),
-                        row.get(1),
-                        row.get(2),
-                        row.get(3),
-                        painData,
-                        row.get(6)
-                });
+                sessionModel.addRow(
+                        new Object[] {row.get(0), row.get(1), row.get(2), row.get(3), painData, row.get(6)});
             }
 
         } catch (Exception e) {
-           // e.printStackTrace();
+            // e.printStackTrace();
 
-            logger.error(
-                    "Failed loading sessions for patientId={}", patientId, e);
-
+            logger.error("Failed loading sessions for patientId={}", patientId, e);
         }
     }
 
     // ================= LOAD PATIENT DETAILS =================
     private void loadPatientDetails() {
-        logger.info("Loading patient details for patientId={}", patientId
-        );
-        String sql = "SELECT * FROM PatientHistory WHERE patient_id = ?";
+        logger.info("Loading patient details for patientId={}", patientId);
+        String sql = SqlQueries.PATIENT_SELECT_BY_ID;
 
         try {
             Connection con = DBConnection.getConnection();
@@ -213,33 +191,46 @@ public class PatientDetailsFrame extends JFrame {
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-                logger.info("Patient record found for patientId={}", patientId
-                );
+                logger.info("Patient record found for patientId={}", patientId);
                 StringBuilder sb = new StringBuilder();
 
                 sb.append("=========== PATIENT DETAILS ===========\n\n");
 
                 sb.append("Name: ").append(safe(rs.getString("patient_name"))).append("\n");
-                sb.append("Mobile: ").append(safe(rs.getString("mobile_number"))).append("\n");
+                sb.append("Mobile: ")
+                        .append(safe(rs.getString("mobile_number")))
+                        .append("\n");
                 sb.append("Age: ").append(rs.getInt("age")).append("\n");
                 sb.append("Gender: ").append(safe(rs.getString("gender"))).append("\n");
-                sb.append("Marital Status: ").append(safe(rs.getString("marital_status"))).append("\n\n");
+                sb.append("Marital Status: ")
+                        .append(safe(rs.getString("marital_status")))
+                        .append("\n\n");
 
                 sb.append("Address: ").append(safe(rs.getString("address"))).append("\n");
-                sb.append("Occupation: ").append(safe(rs.getString("occupation"))).append("\n");
-                sb.append("Blood Group: ").append(safe(rs.getString("blood_group"))).append("\n");
+                sb.append("Occupation: ")
+                        .append(safe(rs.getString("occupation")))
+                        .append("\n");
+                sb.append("Blood Group: ")
+                        .append(safe(rs.getString("blood_group")))
+                        .append("\n");
                 sb.append("Height: ").append(safe(rs.getString("height"))).append(" cm\n");
                 sb.append("Weight: ").append(safe(rs.getString("weight"))).append(" kg\n\n");
 
-                sb.append("Suffering Duration: ").append(safe(rs.getString("suffering_duration"))).append("\n");
-                sb.append("Main Disease: ").append(safe(rs.getString("main_disease"))).append("\n");
-                sb.append("Complications: ").append(safe(rs.getString("complications"))).append("\n");
+                sb.append("Suffering Duration: ")
+                        .append(safe(rs.getString("suffering_duration")))
+                        .append("\n");
+                sb.append("Main Disease: ")
+                        .append(safe(rs.getString("main_disease")))
+                        .append("\n");
+                sb.append("Complications: ")
+                        .append(safe(rs.getString("complications")))
+                        .append("\n");
                 sb.append("Symptoms: ").append(safe(rs.getString("symptoms"))).append("\n\n");
 
                 // 🔴 PAIN POINTS
                 String[] labels = {
-                        "Pan","Gas","Gast","WD","Gal","Spl","Liv","Mu",
-                        "Rtov","Ltov","Dys","Const","Liv0","Mul0","Follic","Thia","B12","Nia"
+                    "Pan", "Gas", "Gast", "WD", "Gal", "Spl", "Liv", "Mu", "Rtov", "Ltov", "Dys", "Const", "Liv0",
+                    "Mul0", "Follic", "Thia", "B12", "Nia"
                 };
 
                 String painRaw = safe(rs.getString("pain_points"));
@@ -262,16 +253,24 @@ public class PatientDetailsFrame extends JFrame {
 
                 sb.append("\n");
 
-                sb.append("Previous Treatment: ").append(safe(rs.getString("previous_treatment"))).append("\n");
+                sb.append("Previous Treatment: ")
+                        .append(safe(rs.getString("previous_treatment")))
+                        .append("\n");
                 sb.append("Medicines: ").append(safe(rs.getString("medicines"))).append("\n");
-                sb.append("Detailed History: ").append(safe(rs.getString("detailed_history"))).append("\n");
-                sb.append("Examination: ").append(safe(rs.getString("examination"))).append("\n\n");
+                sb.append("Detailed History: ")
+                        .append(safe(rs.getString("detailed_history")))
+                        .append("\n");
+                sb.append("Examination: ")
+                        .append(safe(rs.getString("examination")))
+                        .append("\n\n");
 
                 sb.append("----- VITALS -----\n");
                 sb.append("BP: ").append(safe(rs.getString("bp"))).append("\n");
                 sb.append("Pulse: ").append(safe(rs.getString("pulse"))).append("\n");
                 sb.append("O2: ").append(safe(rs.getString("o2"))).append("\n");
-                sb.append("Temperature: ").append(safe(rs.getString("temperature"))).append("\n\n");
+                sb.append("Temperature: ")
+                        .append(safe(rs.getString("temperature")))
+                        .append("\n\n");
 
                 reportPath = safe(rs.getString("reports"));
 
@@ -280,21 +279,21 @@ public class PatientDetailsFrame extends JFrame {
                     sb.append("(Use 'Open Report' button to view)\n");
                 }
 
-                sb.append("Report Analysis: ").append(safe(rs.getString("media"))).append("\n");
-                sb.append("Allergy: ").append(safe(rs.getString("patient_story"))).append("\n");
+                sb.append("Report Analysis: ")
+                        .append(safe(rs.getString("media")))
+                        .append("\n");
+                sb.append("Allergy: ")
+                        .append(safe(rs.getString("patient_story")))
+                        .append("\n");
                 sb.append("Remarks: ").append(safe(rs.getString("remarks"))).append("\n");
 
                 textArea.setText(sb.toString());
-            }else{
-                logger.warn(
-                        "No patient found for patientId={}",
-                        patientId
-                );
+            } else {
+                logger.warn("No patient found for patientId={}", patientId);
             }
 
         } catch (Exception e) {
-            logger.error("Error loading patient details patientId={}", patientId, e
-            );
+            logger.error("Error loading patient details patientId={}", patientId, e);
             JOptionPane.showMessageDialog(this, "Error loading details:\n" + e.getMessage());
         }
     }
@@ -303,13 +302,14 @@ public class PatientDetailsFrame extends JFrame {
         return value == null ? "" : value;
     }
 
-
     private String getShortPainPreview(String painData) {
 
         if (painData == null || painData.isEmpty()) return "";
 
-        String[] labels = {"Pan","Gas","Gast","WD","Gal","Spl","Liv","Mu",
-                "Rtov","Ltov","Dys","Const","Liv0","Mul0","Follic","Thia","B12","Nia"};
+        String[] labels = {
+            "Pan", "Gas", "Gast", "WD", "Gal", "Spl", "Liv", "Mu", "Rtov", "Ltov", "Dys", "Const", "Liv0", "Mul0",
+            "Follic", "Thia", "B12", "Nia"
+        };
 
         String[] pairs = painData.split(",");
 
@@ -325,8 +325,12 @@ public class PatientDetailsFrame extends JFrame {
 
                 if (!vals[0].equals(vals[1])) {
 
-                    sb.append(labels[i]).append(": ")
-                            .append(vals[0]).append("→").append(vals[1]).append("  ");
+                    sb.append(labels[i])
+                            .append(": ")
+                            .append(vals[0])
+                            .append("→")
+                            .append(vals[1])
+                            .append("  ");
 
                     count++;
                 }
@@ -336,36 +340,25 @@ public class PatientDetailsFrame extends JFrame {
         }
 
         if (count == 0) {
-            logger.debug(
-                    "Pain preview generated: No Change"
-            );
+            logger.debug("Pain preview generated: No Change");
             return "No Change";
         }
 
-        logger.debug(
-                "Pain preview generated {}",
-                sb.toString()
-        );
+        logger.debug("Pain preview generated {}", sb.toString());
 
         return sb.toString();
-
     }
     // ================= EXPORT PDF =================
 
     private void exportToPDF() {
-        logger.info("Exporting patient PDF for patientId={}", patientId
-        );
+        logger.info("Exporting patient PDF for patientId={}", patientId);
         try {
             JFileChooser chooser = new JFileChooser();
 
-            //if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
-            if (chooser.showSaveDialog(this)
-                    != JFileChooser.APPROVE_OPTION) {
+            // if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
+            if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) {
 
-                logger.debug(
-                        "PDF export cancelled by user for patientId={}",
-                        patientId
-                );
+                logger.debug("PDF export cancelled by user for patientId={}", patientId);
 
                 return;
             }
@@ -386,209 +379,65 @@ public class PatientDetailsFrame extends JFrame {
                 float yStart = 750;
                 float yPosition = yStart;
                 float width = page.getMediaBox().getWidth() - 2 * margin;
-
-
-                // ================= HEADER =================
-//                ClinicInfo info = ClinicConfig.load();
-//
-//                float headerY = 760;
-//
-//// Logo LEFT
-//                if (info != null
-//                        && info.getLogoPath() != null
-//                        && !info.getLogoPath().isEmpty()) {
-//
-//                    try {
-//
-//                        BufferedImage bufferedImage =
-//                                ImageIO.read(
-//                                        new File(
-//                                                info.getLogoPath()
-//                                        )
-//                                );
-//
-//                        if (bufferedImage != null) {
-//
-//                            PDImageXObject logo =
-//                                    LosslessFactory.createFromImage(
-//                                            doc,
-//                                            bufferedImage
-//                                    );
-//
-//                            content.drawImage(
-//                                    logo,
-//                                    50,     // left
-//                                    720,
-//                                    90,
-//                                    50
-//                            );
-//                        }
-//
-//                    } catch (Exception e) {
-//
-//                        logger.warn(
-//                                "Clinic logo could not be added to PDF",
-//                                e
-//                        );
-//                    }
-//                }
-//
-//
-//// Clinic name RIGHT
-//                content.beginText();
-//
-//                content.setFont(
-//                        PDType1Font.HELVETICA_BOLD,
-//                        18
-//                );
-//
-//                String clinicName =
-//                        (info != null
-//                                && info.getName()!=null
-//                                && !info.getName().isBlank())
-//                                ? info.getName()
-//                                : "Neurotherapy Clinic";
-//
-//                float textWidth =
-//                        PDType1Font.HELVETICA_BOLD
-//                                .getStringWidth(clinicName)
-//                                /1000 *18;
-//
-//                float rightX =
-//                        page.getMediaBox().getWidth()
-//                                - textWidth
-//                                - 50;
-//
-//                content.newLineAtOffset(
-//                        rightX,
-//                        headerY
-//                );
-//
-//                content.showText(
-//                        clinicName
-//                );
-//
-//                content.endText();
-//
-//
-//// separator line
-//                content.moveTo(
-//                        50,
-//                        700
-//                );
-//
-//                content.lineTo(
-//                        page.getMediaBox().getWidth()-50,
-//                        700
-//                );
-//
-//                content.stroke();
-//
-//
-//// Start body lower
-//                yPosition = 675;
-                // ================= CENTERED HEADER (LOGO + NAME INLINE) =================
                 ClinicInfo info = ClinicConfig.load();
-
                 float pageWidth = page.getMediaBox().getWidth();
 
-                String clinicName =
-                        (info != null &&
-                                info.getName() != null &&
-                                !info.getName().isBlank())
-                                ? info.getName()
-                                : "Neurotherapy Clinic";
+                String clinicName = (info != null
+                                && info.getName() != null
+                                && !info.getName().isBlank())
+                        ? info.getName()
+                        : "Neurotherapy Clinic";
 
-// Sizes
+                // Sizes
                 float logoWidth = 60;
                 float logoHeight = 40;
                 float gap = 15;
 
-// text width
-                float textWidth =
-                        PDType1Font.HELVETICA_BOLD
-                                .getStringWidth(clinicName)
-                                /1000 * 18;
+                // text width
+                float textWidth = PDType1Font.HELVETICA_BOLD.getStringWidth(clinicName) / 1000 * 18;
 
-// total width of logo + gap + text
-                float totalWidth =
-                        logoWidth + gap + textWidth;
+                // total width of logo + gap + text
+                float totalWidth = logoWidth + gap + textWidth;
 
-// centered starting x
-                float startX =
-                        (pageWidth - totalWidth) / 2;
+                // centered starting x
+                float startX = (pageWidth - totalWidth) / 2;
 
                 float headerY = 735;
 
-
-// -------- Logo (LEFT) --------
-                if (info != null &&
-                        info.getLogoPath() != null &&
-                        !info.getLogoPath().isEmpty()) {
+                // -------- Logo (LEFT) --------
+                if (info != null
+                        && info.getLogoPath() != null
+                        && !info.getLogoPath().isEmpty()) {
 
                     try {
 
-                        BufferedImage bufferedImage =
-                                ImageIO.read(
-                                        new File(info.getLogoPath())
-                                );
+                        BufferedImage bufferedImage = ImageIO.read(new File(info.getLogoPath()));
 
                         if (bufferedImage != null) {
 
-                            PDImageXObject logo =
-                                    LosslessFactory.createFromImage(
-                                            doc,
-                                            bufferedImage
-                                    );
+                            PDImageXObject logo = LosslessFactory.createFromImage(doc, bufferedImage);
 
-                            content.drawImage(
-                                    logo,
-                                    startX,
-                                    headerY - 10,
-                                    logoWidth,
-                                    logoHeight
-                            );
+                            content.drawImage(logo, startX, headerY - 10, logoWidth, logoHeight);
                         }
 
-                    } catch(Exception e){
-                        logger.warn(
-                                "Logo could not load",
-                                e
-                        );
+                    } catch (Exception e) {
+                        logger.warn("Logo could not load", e);
                     }
                 }
 
-
-// -------- Clinic Name (RIGHT OF LOGO) --------
+                // -------- Clinic Name (RIGHT OF LOGO) --------
                 content.beginText();
-
-                content.setFont(
-                        PDType1Font.HELVETICA_BOLD,
-                        18
-                );
-
-                content.newLineAtOffset(
-                        startX + logoWidth + gap,
-                        headerY
-                );
-
-                content.showText(
-                        clinicName
-                );
-
+                content.setFont(PDType1Font.HELVETICA_BOLD, 18);
+                content.newLineAtOffset(startX + logoWidth + gap, headerY);
+                content.showText(clinicName);
                 content.endText();
 
-
-// -------- Divider --------
-                content.moveTo(50,690);
-                content.lineTo(
-                        pageWidth - 50,
-                        690
-                );
+                // -------- Divider --------
+                content.moveTo(50, 690);
+                content.lineTo(pageWidth - 50, 690);
                 content.stroke();
 
-
-// Start content below header
+                // Start content below header
                 yPosition = 665;
 
                 // ================= MAIN CONTENT =================
@@ -604,10 +453,7 @@ public class PatientDetailsFrame extends JFrame {
                     for (String wrappedLine : wrapText(line, font, fontSize, width)) {
 
                         if (yPosition <= 50) {
-                            logger.debug(
-                                    "Adding additional PDF page for patientId={}",
-                                    patientId
-                            );
+                            logger.debug("Adding additional PDF page for patientId={}", patientId);
                             content.endText();
                             content.close();
 
@@ -635,16 +481,14 @@ public class PatientDetailsFrame extends JFrame {
                 content.close();
 
                 doc.save(path);
-                logger.info("PDF exported successfully {}", path
-                );
+                logger.info("PDF exported successfully {}", path);
             }
 
             JOptionPane.showMessageDialog(this, "PDF Saved!");
 
         } catch (Exception e) {
-            //e.printStackTrace();
-            logger.error("PDF export failed for patientId={}", patientId, e
-            );
+            // e.printStackTrace();
+            logger.error("PDF export failed for patientId={}", patientId, e);
             JOptionPane.showMessageDialog(this, "Error creating PDF");
         }
     }
@@ -673,25 +517,19 @@ public class PatientDetailsFrame extends JFrame {
         lines.add(line.toString());
         return lines;
     }
-    private String formatPainData(String painData) {
 
+    private String formatPainData(String painData) {
         if (painData == null || painData.isEmpty()) return "";
 
         String[] labels = {
-                "Pan","Gas","Gast","WD","Gal","Spl","Liv","Mu",
-                "Rtov","Ltov","Dys","Const","Liv0","Mul0","Follic","Thia","B12","Nia"
+            "Pan", "Gas", "Gast", "WD", "Gal", "Spl", "Liv", "Mu", "Rtov", "Ltov", "Dys", "Const", "Liv0", "Mul0",
+            "Follic", "Thia", "B12", "Nia"
         };
-
         StringBuilder sb = new StringBuilder();
-
         String[] pairs = painData.split(",");
-
         int index = 0;
-
         for (String p : pairs) {
-
             if (p.contains("->") && index < labels.length) {
-
                 sb.append(labels[index])
                         .append(": ")
                         .append(p.replace("->", " → "))
@@ -700,7 +538,6 @@ public class PatientDetailsFrame extends JFrame {
                 index++;
             }
         }
-
         return sb.toString();
     }
 }

@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2026. All rights reserved. contact kwisha.shah2004 for more details.
+ */
 package com.neuro.model;
 
 import java.sql.Timestamp;
@@ -50,108 +53,283 @@ public class Patient {
 
     // ================= GETTERS & SETTERS =================
 
-    public Integer getPatientId() { return patientId; }
-    public void setPatientId(Integer patientId) { this.patientId = patientId; }
+    public Integer getPatientId() {
+        return patientId;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public void setPatientId(Integer patientId) {
+        this.patientId = patientId;
+    }
 
-    public String getMobile() { return mobile; }
-    public void setMobile(String mobile) { this.mobile = mobile; }
+    public String getName() {
+        return name;
+    }
 
-    public Integer getAge() { return age; }
-    public void setAge(Integer age) { this.age = age; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public String getGender() { return gender; }
-    public void setGender(String gender) { this.gender = gender; }
+    public String getMobile() {
+        return mobile;
+    }
 
-    public String getMaritalStatus() { return maritalStatus; }
-    public void setMaritalStatus(String maritalStatus) { this.maritalStatus = maritalStatus; }
+    public void setMobile(String mobile) {
+        this.mobile = mobile;
+    }
 
-    public String getAddress() { return address; }
-    public void setAddress(String address) { this.address = address; }
+    public Integer getAge() {
+        return age;
+    }
 
-    public String getOccupation() { return occupation; }
-    public void setOccupation(String occupation) { this.occupation = occupation; }
+    public void setAge(Integer age) {
+        this.age = age;
+    }
 
-    public String getBloodGroup() { return bloodGroup; }
-    public void setBloodGroup(String bloodGroup) { this.bloodGroup = bloodGroup; }
+    public String getGender() {
+        return gender;
+    }
 
-    public Float getHeight() { return height; }
-    public void setHeight(Float height) { this.height = height; }
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
 
-    public Float getWeight() { return weight; }
-    public void setWeight(Float weight) { this.weight = weight; }
+    public String getMaritalStatus() {
+        return maritalStatus;
+    }
 
-    public String getSufferingDuration() { return sufferingDuration; }
-    public void setSufferingDuration(String sufferingDuration) { this.sufferingDuration = sufferingDuration; }
+    public void setMaritalStatus(String maritalStatus) {
+        this.maritalStatus = maritalStatus;
+    }
 
-    public String getMainDisease() { return mainDisease; }
-    public void setMainDisease(String mainDisease) { this.mainDisease = mainDisease; }
+    public String getAddress() {
+        return address;
+    }
 
-    public String getComplications() { return complications; }
-    public void setComplications(String complications) { this.complications = complications; }
+    public void setAddress(String address) {
+        this.address = address;
+    }
 
-    public String getSymptoms() { return symptoms; }
-    public void setSymptoms(String symptoms) { this.symptoms = symptoms; }
+    public String getOccupation() {
+        return occupation;
+    }
 
-    public String getPainPoints() { return painPoints; }
-    public void setPainPoints(String painPoints) { this.painPoints = painPoints; }
+    public void setOccupation(String occupation) {
+        this.occupation = occupation;
+    }
 
-    public String getTongue() { return tongue; }
-    public void setTongue(String tongue) { this.tongue = tongue; }
+    public String getBloodGroup() {
+        return bloodGroup;
+    }
 
-    public String getStool() { return stool; }
-    public void setStool(String stool) { this.stool = stool; }
+    public void setBloodGroup(String bloodGroup) {
+        this.bloodGroup = bloodGroup;
+    }
 
-    public String getUrine() { return urine; }
-    public void setUrine(String urine) { this.urine = urine; }
+    public Float getHeight() {
+        return height;
+    }
 
-    public String getNails() { return nails; }
-    public void setNails(String nails) { this.nails = nails; }
+    public void setHeight(Float height) {
+        this.height = height;
+    }
 
-    public String getNavel() { return navel; }
-    public void setNavel(String navel) { this.navel = navel; }
+    public Float getWeight() {
+        return weight;
+    }
 
-    public String getNeurotherapyRequired() { return neurotherapyRequired; }
-    public void setNeurotherapyRequired(String neurotherapyRequired) { this.neurotherapyRequired = neurotherapyRequired; }
+    public void setWeight(Float weight) {
+        this.weight = weight;
+    }
 
-    public String getPreviousTreatment() { return previousTreatment; }
-    public void setPreviousTreatment(String previousTreatment) { this.previousTreatment = previousTreatment; }
+    public String getSufferingDuration() {
+        return sufferingDuration;
+    }
 
-    public String getMedicines() { return medicines; }
-    public void setMedicines(String medicines) { this.medicines = medicines; }
+    public void setSufferingDuration(String sufferingDuration) {
+        this.sufferingDuration = sufferingDuration;
+    }
 
-    public String getDetailedHistory() { return detailedHistory; }
-    public void setDetailedHistory(String detailedHistory) { this.detailedHistory = detailedHistory; }
+    public String getMainDisease() {
+        return mainDisease;
+    }
 
-    public String getExamination() { return examination; }
-    public void setExamination(String examination) { this.examination = examination; }
+    public void setMainDisease(String mainDisease) {
+        this.mainDisease = mainDisease;
+    }
 
-    public String getBp() { return bp; }
-    public void setBp(String bp) { this.bp = bp; }
+    public String getComplications() {
+        return complications;
+    }
 
-    public String getPulse() { return pulse; }
-    public void setPulse(String pulse) { this.pulse = pulse; }
+    public void setComplications(String complications) {
+        this.complications = complications;
+    }
 
-    public String getO2() { return o2; }
-    public void setO2(String o2) { this.o2 = o2; }
+    public String getSymptoms() {
+        return symptoms;
+    }
 
-    public String getTemperature() { return temperature; }
-    public void setTemperature(String temperature) { this.temperature = temperature; }
+    public void setSymptoms(String symptoms) {
+        this.symptoms = symptoms;
+    }
 
-    public String getReports() { return reports; }
-    public void setReports(String reports) { this.reports = reports; }
+    public String getPainPoints() {
+        return painPoints;
+    }
 
-    public String getMedia() { return media; }
-    public void setMedia(String media) { this.media = media; }
+    public void setPainPoints(String painPoints) {
+        this.painPoints = painPoints;
+    }
 
-    public String getPatientStory() { return patientStory; }
-    public void setPatientStory(String patientStory) { this.patientStory = patientStory; }
+    public String getTongue() {
+        return tongue;
+    }
 
-    public String getRemarks() { return remarks; }
-    public void setRemarks(String remarks) { this.remarks = remarks; }
+    public void setTongue(String tongue) {
+        this.tongue = tongue;
+    }
 
-    public Timestamp getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+    public String getStool() {
+        return stool;
+    }
+
+    public void setStool(String stool) {
+        this.stool = stool;
+    }
+
+    public String getUrine() {
+        return urine;
+    }
+
+    public void setUrine(String urine) {
+        this.urine = urine;
+    }
+
+    public String getNails() {
+        return nails;
+    }
+
+    public void setNails(String nails) {
+        this.nails = nails;
+    }
+
+    public String getNavel() {
+        return navel;
+    }
+
+    public void setNavel(String navel) {
+        this.navel = navel;
+    }
+
+    public String getNeurotherapyRequired() {
+        return neurotherapyRequired;
+    }
+
+    public void setNeurotherapyRequired(String neurotherapyRequired) {
+        this.neurotherapyRequired = neurotherapyRequired;
+    }
+
+    public String getPreviousTreatment() {
+        return previousTreatment;
+    }
+
+    public void setPreviousTreatment(String previousTreatment) {
+        this.previousTreatment = previousTreatment;
+    }
+
+    public String getMedicines() {
+        return medicines;
+    }
+
+    public void setMedicines(String medicines) {
+        this.medicines = medicines;
+    }
+
+    public String getDetailedHistory() {
+        return detailedHistory;
+    }
+
+    public void setDetailedHistory(String detailedHistory) {
+        this.detailedHistory = detailedHistory;
+    }
+
+    public String getExamination() {
+        return examination;
+    }
+
+    public void setExamination(String examination) {
+        this.examination = examination;
+    }
+
+    public String getBp() {
+        return bp;
+    }
+
+    public void setBp(String bp) {
+        this.bp = bp;
+    }
+
+    public String getPulse() {
+        return pulse;
+    }
+
+    public void setPulse(String pulse) {
+        this.pulse = pulse;
+    }
+
+    public String getO2() {
+        return o2;
+    }
+
+    public void setO2(String o2) {
+        this.o2 = o2;
+    }
+
+    public String getTemperature() {
+        return temperature;
+    }
+
+    public void setTemperature(String temperature) {
+        this.temperature = temperature;
+    }
+
+    public String getReports() {
+        return reports;
+    }
+
+    public void setReports(String reports) {
+        this.reports = reports;
+    }
+
+    public String getMedia() {
+        return media;
+    }
+
+    public void setMedia(String media) {
+        this.media = media;
+    }
+
+    public String getPatientStory() {
+        return patientStory;
+    }
+
+    public void setPatientStory(String patientStory) {
+        this.patientStory = patientStory;
+    }
+
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
 }

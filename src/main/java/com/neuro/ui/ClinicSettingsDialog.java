@@ -1,15 +1,18 @@
+/*
+ * Copyright (c) 2026. All rights reserved. contact kwisha.shah2004 for more details.
+ */
 package com.neuro.ui;
 
 import com.neuro.config.ClinicConfig;
 import com.neuro.model.ClinicInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import javax.swing.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ClinicSettingsDialog extends JDialog {
-    private static final Logger logger = LoggerFactory.getLogger(ClinicSettingsDialog.class);
+    private static final Logger logger = LogManager.getLogger(ClinicSettingsDialog.class);
     private JTextField nameField;
     private JLabel logoLabel;
     private JLabel previewLabel;
@@ -70,39 +73,22 @@ public class ClinicSettingsDialog extends JDialog {
 
         JFileChooser chooser = new JFileChooser();
 
-        chooser.setFileFilter(
-                new javax.swing.filechooser.FileNameExtensionFilter(
-                        "Image Files (JPG, PNG, JPEG)",
-                        "jpg", "jpeg", "png"
-                )
-        );
+        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+                "Image Files (JPG, PNG, JPEG)", "jpg", "jpeg", "png"));
 
-        if (chooser.showOpenDialog(this)
-                == JFileChooser.APPROVE_OPTION) {
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
 
             File file = chooser.getSelectedFile();
 
-            logger.info(
-                    "User selected logo file={}",
-                    file.getAbsolutePath()
-            );
+            logger.info("User selected logo file={}", file.getAbsolutePath());
 
-            String path =
-                    file.getAbsolutePath().toLowerCase();
+            String path = file.getAbsolutePath().toLowerCase();
 
-            if (!(path.endsWith(".png")
-                    || path.endsWith(".jpg")
-                    || path.endsWith(".jpeg"))) {
+            if (!(path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".jpeg"))) {
 
-                logger.warn(
-                        "Invalid logo format selected={}",
-                        file.getName()
-                );
+                logger.warn("Invalid logo format selected={}", file.getName());
 
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Invalid image. Use PNG/JPG"
-                );
+                JOptionPane.showMessageDialog(this, "Invalid image. Use PNG/JPG");
                 return;
             }
 
@@ -112,43 +98,24 @@ public class ClinicSettingsDialog extends JDialog {
 
                 logoLabel.setText(file.getName());
 
-                ImageIcon icon =
-                        new ImageIcon(logoPath);
+                ImageIcon icon = new ImageIcon(logoPath);
 
-                Image img =
-                        icon.getImage().getScaledInstance(
-                                120,
-                                60,
-                                Image.SCALE_SMOOTH
-                        );
+                Image img = icon.getImage().getScaledInstance(120, 60, Image.SCALE_SMOOTH);
 
-                previewLabel.setIcon(
-                        new ImageIcon(img)
-                );
+                previewLabel.setIcon(new ImageIcon(img));
 
-                logger.info(
-                        "Logo preview loaded successfully path={}",
-                        logoPath
-                );
+                logger.info("Logo preview loaded successfully path={}", logoPath);
 
             } catch (Exception e) {
 
-                logger.error(
-                        "Failed loading logo preview",
-                        e
-                );
+                logger.error("Failed loading logo preview", e);
 
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Error loading image"
-                );
+                JOptionPane.showMessageDialog(this, "Error loading image");
             }
 
         } else {
 
-            logger.debug(
-                    "Logo upload cancelled by user"
-            );
+            logger.debug("Logo upload cancelled by user");
         }
     }
 
@@ -156,57 +123,32 @@ public class ClinicSettingsDialog extends JDialog {
 
         try {
 
-            String clinicName =
-                    nameField.getText().trim();
+            String clinicName = nameField.getText().trim();
 
             if (clinicName.isEmpty()) {
-                logger.warn(
-                        "Save blocked: clinic name empty"
-                );
+                logger.warn("Save blocked: clinic name empty");
 
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Clinic name required"
-                );
+                JOptionPane.showMessageDialog(this, "Clinic name required");
                 return;
             }
 
-            logger.info(
-                    "Saving clinic settings name={} logo={}",
-                    clinicName,
-                    logoPath
-            );
+            logger.info("Saving clinic settings name={} logo={}", clinicName, logoPath);
 
-            ClinicInfo info =
-                    new ClinicInfo(
-                            clinicName,
-                            logoPath
-                    );
+            ClinicInfo info = new ClinicInfo(clinicName, logoPath);
 
             ClinicConfig.save(info);
 
-            logger.info(
-                    "Clinic settings saved successfully"
-            );
+            logger.info("Clinic settings saved successfully");
 
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Saved Successfully!"
-            );
+            JOptionPane.showMessageDialog(this, "Saved Successfully!");
 
             dispose();
 
         } catch (Exception e) {
 
-            logger.error(
-                    "Clinic settings save failed",
-                    e
-            );
+            logger.error("Clinic settings save failed", e);
 
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Error saving settings"
-            );
+            JOptionPane.showMessageDialog(this, "Error saving settings");
         }
     }
 
@@ -214,60 +156,35 @@ public class ClinicSettingsDialog extends JDialog {
 
         try {
 
-            logger.debug(
-                    "Loading existing clinic settings"
-            );
+            logger.debug("Loading existing clinic settings");
 
-            ClinicInfo info =
-                    ClinicConfig.load();
+            ClinicInfo info = ClinicConfig.load();
 
             if (info != null) {
 
-                nameField.setText(
-                        info.getName()
-                );
+                nameField.setText(info.getName());
 
-                logoPath =
-                        info.getLogoPath();
+                logoPath = info.getLogoPath();
 
-                logger.info(
-                        "Loaded clinic settings name={} logo={}",
-                        info.getName(),
-                        logoPath
-                );
+                logger.info("Loaded clinic settings name={} logo={}", info.getName(), logoPath);
 
-                if (logoPath != null
-                        && !logoPath.isEmpty()) {
+                if (logoPath != null && !logoPath.isEmpty()) {
 
-                    File file =
-                            new File(logoPath);
+                    File file = new File(logoPath);
 
-                    logoLabel.setText(
-                            file.getName()
-                    );
+                    logoLabel.setText(file.getName());
 
-                    ImageIcon icon =
-                            new ImageIcon(logoPath);
+                    ImageIcon icon = new ImageIcon(logoPath);
 
-                    Image img =
-                            icon.getImage().getScaledInstance(
-                                    120,
-                                    60,
-                                    Image.SCALE_SMOOTH
-                            );
+                    Image img = icon.getImage().getScaledInstance(120, 60, Image.SCALE_SMOOTH);
 
-                    previewLabel.setIcon(
-                            new ImageIcon(img)
-                    );
+                    previewLabel.setIcon(new ImageIcon(img));
                 }
             }
 
         } catch (Exception e) {
 
-            logger.error(
-                    "Failed loading clinic settings",
-                    e
-            );
+            logger.error("Failed loading clinic settings", e);
         }
     }
 }

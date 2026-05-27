@@ -19,6 +19,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <mysql.version>8.0.33</mysql.version>
         <pdfbox.version>2.0.29</pdfbox.version>
+        <log4j.version>2.23.1</log4j.version>
         <maven.build.timestamp.format>yyyyMMdd-HHmmss</maven.build.timestamp.format>
     </properties>
 
@@ -37,23 +38,39 @@
             <version>${pdfbox.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.mindrot</groupId>
-            <artifactId>jbcrypt</artifactId>
-            <version>0.4</version>
+    <groupId>org.mindrot</groupId>
+    <artifactId>jbcrypt</artifactId>
+    <version>0.4</version>
+</dependency>
+        <!-- Log4j 2 (API + core) -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>${log4j.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>2.0.9</version>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>${log4j.version}</version>
         </dependency>
 
+        <!-- Bridge any third-party libs (e.g. PDFBox) that still log via SLF4J -->
         <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.4.11</version>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j2-impl</artifactId>
+            <version>${log4j.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- JUnit 5 (test scope) -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
-
+    
 
     <build>
         <plugins>
@@ -68,6 +85,12 @@
                 </configuration>
             </plugin>
 
+            <!-- Surefire (JUnit 5 support) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+            </plugin>
             <!-- Assembly Plugin for creating executable JAR with dependencies -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -111,84 +134,32 @@
                 </configuration>
             </plugin>
 
-            <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-antrun-plugin</artifactId>
-            <executions>
-                <execution>
-                    <phase>test</phase>
-                    <goals>
-                        <goal>run</goal>
-                    </goals>
-                    <configuration>
-                        <target>
-                            <echo>Using env.test.properties</echo>
-                            <copy file="src/main/resources/db.properties" tofile="${basedir}/target/db.properties"/>
-                        </target>
-                    </configuration>
-                </execution>
-            </executions>
-            </plugin>
-
+            <!-- Copy db.properties next to the built JAR in target/ -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.5.0</version>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
                 <executions>
-
                     <execution>
-                        <id>license-sdk</id>
-
-                        <phase>package</phase>
-
+                        <id>copy-db-properties</id>
+                        <phase>prepare-package</phase>
                         <goals>
-                            <goal>shade</goal>
+                            <goal>copy-resources</goal>
                         </goals>
-
                         <configuration>
-
-                            <finalName>licensesdk</finalName>
-                            <createDependencyReducedPom>false</createDependencyReducedPom>
-                            <artifactSet>
-                                <includes>
-                                    <include>${project.groupId}:${project.artifactId}</include>
-                                </includes>
-                            </artifactSet>
-
-                            <filters>
-
-                                <filter>
-
-                                    <artifact>${project.groupId}:${project.artifactId}</artifact>
-
+                            <outputDirectory>${project.build.directory}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/src/main/resources</directory>
                                     <includes>
-                                        <include>com/neuro/license/**</include>
-                                        <include>com/neuro/exceptions/LicenceException.class</include>
+                                        <include>db.properties</include>
                                     </includes>
-
-                                </filter>
-
-                            </filters>
-
-                            <transformers>
-
-                                <transformer implementation=
-                                                     "org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-
-                                    <mainClass>
-                                        com.neuro.license.LicenseLauncher
-                                    </mainClass>
-
-                                </transformer>
-
-                            </transformers>
-
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
                         </configuration>
-
                     </execution>
-
                 </executions>
-
             </plugin>
 
             <!-- yGuard obfuscation via antrun -->
@@ -230,13 +201,15 @@
                                                    methods="public" fields="public"/>
                                             <class name="com.neuro.model.PatientColumns"
                                                    methods="public" fields="public"/>
-                                            <class classes="private" methods="private" fields="private">
-                                                <patternset>
-                                                    <include name="com.mysql.**"/>
-                                                    <include name="org.slf4j.**"/>
-                                                    <include name="org.apache.logging.log4j.**"/>
-                                                </patternset>
-                                            </class>
+
+
+                                        <class classes="private" methods="private" fields="private">
+                                            <patternset>
+                                                <include name="com.mysql.**"/>
+                                                <include name="org.slf4j.**"/>
+                                                <include name="org.apache.logging.log4j.**"/>
+                                            </patternset>
+                                        </class>
                                         </keep>
                                     </rename>
                                 </yguard>
@@ -247,6 +220,7 @@
                     </execution>
                 </executions>
             </plugin>
+
         </plugins>
     </build>
 </project>

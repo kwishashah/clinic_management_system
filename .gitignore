@@ -1,5 +1,7 @@
 # Build output
-out/
+target/classes
+target/db.properties
+target/**
 *.class
 *.jar
 !tools/yguard.jar

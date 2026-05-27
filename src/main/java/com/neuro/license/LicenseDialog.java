@@ -1,10 +1,16 @@
-
+/*
+ * Copyright (c) 2026. All rights reserved. contact kwisha.shah2004 for more details.
+ */
 package com.neuro.license;
 
-import javax.swing.*;
 import java.awt.*;
+import javax.swing.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class LicenseDialog extends JDialog {
+
+    private static final Logger logger = LogManager.getLogger(LicenseDialog.class);
 
     private JTextField txtKey;
     private boolean success = false;
@@ -15,9 +21,9 @@ public class LicenseDialog extends JDialog {
         setLocationRelativeTo(null);
         setModal(true);
 
-        JPanel panel = new JPanel(new BorderLayout(10,10));
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
 
-        JLabel title = new JLabel("Enter License Key", JLabel.CENTER);
+        JLabel title = new JLabel("Enter License Key", SwingConstants.CENTER);
         title.setFont(new Font("Segoe UI", Font.BOLD, 16));
 
         txtKey = new JTextField();
@@ -30,7 +36,7 @@ public class LicenseDialog extends JDialog {
         panel.add(txtKey, BorderLayout.CENTER);
         panel.add(btnActivate, BorderLayout.SOUTH);
 
-        panel.setBorder(BorderFactory.createEmptyBorder(20,20,20,20));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         add(panel);
     }
@@ -50,6 +56,7 @@ public class LicenseDialog extends JDialog {
             }
 
         } catch (Exception e) {
+            logger.error("License validation failed", e);
             JOptionPane.showMessageDialog(this, "Error validating license");
         }
     }

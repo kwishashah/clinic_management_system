@@ -1,23 +1,34 @@
+/*
+ * Copyright (c) 2026. All rights reserved. contact kwisha.shah2004 for more details.
+ */
 package com.neuro.ui;
 
-import com.neuro.dao.UserDAO;
-
-import javax.swing.*;
+import com.neuro.app.AppContext;
+import com.neuro.repo.UserRepository;
 import java.awt.*;
+import javax.swing.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class SignupFrame extends JDialog {
+
+    private static final Logger logger = LogManager.getLogger(SignupFrame.class);
 
     private JTextField txtUsername;
     private JPasswordField txtPassword;
     private JPasswordField txtConfirmPassword;
 
-    // ✅ Optional: allows new SignupFrame() also
-    public SignupFrame() {
-        this(null);
+    private final AppContext context;
+    private final UserRepository userRepo;
+
+    public SignupFrame(AppContext context) {
+        this(null, context);
     }
 
-    public SignupFrame(JFrame parent) {
+    public SignupFrame(JFrame parent, AppContext context) {
         super(parent, "Create New Account", true); // modal dialog
+        this.context = context;
+        this.userRepo = context.userRepo();
         setSize(450, 320);
         setLocationRelativeTo(parent);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -42,13 +53,16 @@ public class SignupFrame extends JDialog {
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
         lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
 
-        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
         panel.add(lblTitle, gbc);
 
         gbc.gridwidth = 1;
 
         // 🔹 Username
-        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
         panel.add(new JLabel("Username:"), gbc);
 
         txtUsername = new JTextField();
@@ -57,7 +71,8 @@ public class SignupFrame extends JDialog {
         panel.add(txtUsername, gbc);
 
         // 🔹 Password
-        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridx = 0;
+        gbc.gridy = 2;
         panel.add(new JLabel("Password:"), gbc);
 
         txtPassword = new JPasswordField();
@@ -66,7 +81,8 @@ public class SignupFrame extends JDialog {
         panel.add(txtPassword, gbc);
 
         // 🔹 Confirm Password
-        gbc.gridx = 0; gbc.gridy = 3;
+        gbc.gridx = 0;
+        gbc.gridy = 3;
         panel.add(new JLabel("Confirm Password:"), gbc);
 
         txtConfirmPassword = new JPasswordField();
@@ -117,33 +133,29 @@ public class SignupFrame extends JDialog {
             }
 
             if (password.length() < 5) {
-                JOptionPane.showMessageDialog(this,
-                        "Password must be at least 5 characters");
+                JOptionPane.showMessageDialog(this, "Password must be at least 5 characters");
                 return;
             }
 
             // ✅ CHECK FIRST (this is the missing piece)
-            if (UserDAO.userExists(username)) {
+            if (userRepo.userExists(username)) {
                 JOptionPane.showMessageDialog(this, "Username already exists");
                 return;
             }
 
-            boolean success = UserDAO.insertUser(username, password);
-            int userId = UserDAO.getUserId(username);
+            boolean success = userRepo.insertUser(username, password);
+            int userId = userRepo.getUserId(username);
             if (success) {
-                JOptionPane.showMessageDialog(this,
-                        "Account created successfully!");
+                JOptionPane.showMessageDialog(this, "Account created successfully!");
                 dispose();
-                new DoctorDashboard(userId).setVisible(true);
+                new DoctorDashboard(userId, context).setVisible(true);
             } else {
-                JOptionPane.showMessageDialog(this,
-                        "Error creating account");
+                JOptionPane.showMessageDialog(this, "Error creating account");
             }
 
         } catch (Exception e) {
+            logger.error("Signup failed", e);
             JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
-            e.printStackTrace();
         }
     }
-
 }

@@ -1,32 +1,42 @@
+/*
+ * Copyright (c) 2026. All rights reserved. contact kwisha.shah2004 for more details.
+ */
 package com.neuro.ui;
 
-import com.neuro.dao.UserDAO;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import javax.swing.*;
+import com.neuro.app.AppContext;
+import com.neuro.repo.UserRepository;
 import java.awt.*;
+import javax.swing.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class LoginFrame extends JFrame {
 
     private JTextField txtUsername;
     private JPasswordField txtPassword;
-    private static final Logger logger =
-            LoggerFactory.getLogger(LoginFrame.class);
-    public LoginFrame() {
+    private static final Logger logger = LogManager.getLogger(LoginFrame.class);
+
+    private final AppContext context;
+    private final UserRepository userRepo;
+
+    public LoginFrame(AppContext context) {
+        this.context = context;
+        this.userRepo = context.userRepo();
         setTitle("Clinic Login");
         setSize(450, 320);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(20,20,20,20));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10,10,10,10);
+        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
 
         // Username
-        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
         panel.add(new JLabel("Username:"), gbc);
 
         txtUsername = new JTextField();
@@ -35,7 +45,8 @@ public class LoginFrame extends JFrame {
         panel.add(txtUsername, gbc);
 
         // Password
-        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
         panel.add(new JLabel("Password:"), gbc);
 
         txtPassword = new JPasswordField();
@@ -45,7 +56,9 @@ public class LoginFrame extends JFrame {
 
         // Login Button
         JButton btnLogin = new JButton("Login");
-        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2;
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.CENTER;
         panel.add(btnLogin, gbc);
@@ -58,9 +71,7 @@ public class LoginFrame extends JFrame {
         btnLogin.addActionListener(e -> login());
 
         // 🔥 THIS IS WHERE IT GOES
-        btnSignup.addActionListener(e ->
-                new SignupFrame(this).setVisible(true)
-        );
+        btnSignup.addActionListener(e -> new SignupFrame(this, context).setVisible(true));
 
         add(panel);
     }
@@ -73,61 +84,41 @@ public class LoginFrame extends JFrame {
             String password = new String(txtPassword.getPassword());
 
             // empty credentials
-            if(username.isEmpty() || password.isEmpty()){
+            if (username.isEmpty() || password.isEmpty()) {
                 logger.warn("Login attempted with empty credentials");
-                JOptionPane.showMessageDialog(this,"Enter username and password");
+                JOptionPane.showMessageDialog(this, "Enter username and password");
                 return;
             }
 
             // login attempt
             logger.info("Login attempt for username={}", username);
 
-            if (UserDAO.validateUser(username, password)) {
+            if (userRepo.validateUser(username, password)) {
 
-                int userId = UserDAO.getUserId(username);
+                int userId = userRepo.getUserId(username);
 
                 // successful login
-                logger.info(
-                        "Login successful userId={} username={}",
-                        userId,
-                        username
-                );
+                logger.info("Login successful userId={} username={}", userId, username);
 
-                logger.debug(
-                        "Launching DoctorDashboard for userId={}",
-                        userId
-                );
+                logger.debug("Launching DoctorDashboard for userId={}", userId);
 
                 // IMPORTANT: only once (you had it twice)
-                new DoctorDashboard(userId).setVisible(true);
+                new DoctorDashboard(userId, context).setVisible(true);
 
                 dispose();
 
             } else {
 
-                logger.warn(
-                        "Login failed for username={}",
-                        username
-                );
+                logger.warn("Login failed for username={}", username);
 
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Invalid credentials"
-                );
+                JOptionPane.showMessageDialog(this, "Invalid credentials");
             }
 
         } catch (Exception e) {
 
-            logger.error(
-                    "Login error for username={}",
-                    txtUsername.getText(),
-                    e
-            );
+            logger.error("Login error for username={}", txtUsername.getText(), e);
 
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Login error: " + e.getMessage()
-            );
+            JOptionPane.showMessageDialog(this, "Login error: " + e.getMessage());
         }
     }
 }

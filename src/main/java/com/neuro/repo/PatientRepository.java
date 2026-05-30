@@ -4,6 +4,7 @@
 package com.neuro.repo;
 
 import com.neuro.exceptions.DatabaseException;
+import com.neuro.model.PatientSummary;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.List;
@@ -53,7 +54,7 @@ public interface PatientRepository {
     /** Returns a summary view of every patient owned by the given user. */
 
     /** Returns paginated patients for the user. */
-    List<Object[]> getPatients(
+    List<PatientSummary> getPatients(
             int userId,
             int page,
             int pageSize
@@ -62,5 +63,5 @@ public interface PatientRepository {
     /** Returns total patient count. */
     int getPatientCount(int userId) throws DatabaseException;
     /** Searches the user's patients by mobile-number fragment. */
-    List<Object[]> searchPatientsByMobile(int userId, String mobile) throws DatabaseException;
+    List<PatientSummary> searchPatientsByMobile(int userId, String mobile) throws DatabaseException;
 }

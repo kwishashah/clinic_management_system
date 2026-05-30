@@ -6,11 +6,13 @@ package com.neuro.ui;
 import com.neuro.app.AppContext;
 import com.neuro.config.ClinicConfig;
 import com.neuro.model.ClinicInfo;
+import com.neuro.model.PatientSummary;
 import com.neuro.repo.PatientRepository;
 import com.neuro.session.UserSession;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
+import java.util.Stack;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import org.apache.logging.log4j.LogManager;
@@ -34,8 +36,9 @@ public class DoctorDashboard extends JFrame {
     private final int pageSize = 10;
 
     private JButton btnNext;
-
     private JButton btnPrev;
+    private JButton btnFirst;
+    private JButton btnLast;
 
     private JLabel lblPageInfo;
     public DoctorDashboard(int userId, AppContext context) {
@@ -130,6 +133,9 @@ public class DoctorDashboard extends JFrame {
         btnPrev = new JButton("Previous");
 
         btnNext = new JButton("Next");
+        btnFirst = new JButton("First");
+
+        btnLast = new JButton("Last");
 
         lblPageInfo = new JLabel("Page 1");
 
@@ -139,9 +145,11 @@ public class DoctorDashboard extends JFrame {
 
         JPanel paginationPanel = new JPanel();
 
+        paginationPanel.add(btnFirst);
         paginationPanel.add(btnPrev);
         paginationPanel.add(lblPageInfo);
         paginationPanel.add(btnNext);
+        paginationPanel.add(btnLast);
 
         bottomPanel.add(paginationPanel, BorderLayout.EAST);
 
@@ -151,7 +159,9 @@ public class DoctorDashboard extends JFrame {
         btnSearch.addActionListener(e -> searchPatients());
         btnView.addActionListener(e -> viewPatientDetails());
         btnPrev.addActionListener(e -> previousPage());
+        btnFirst.addActionListener(e -> firstPage());
 
+        btnLast.addActionListener(e -> lastPage());
         btnNext.addActionListener(e -> nextPage());
         btnAddPatient.addActionListener(e -> openPatientForm());
 
@@ -174,7 +184,31 @@ public class DoctorDashboard extends JFrame {
         loadPatients();
         logger.info("Dashboard initialized successfully for userId={}", userId);
     }
+    private void firstPage() {
 
+        currentPage = 1;
+
+        loadPatients();
+    }
+    private void lastPage() {
+
+        try {
+
+            int totalRecords =
+                    patientRepo.getPatientCount(userId);
+
+            int totalPages =
+                    (int) Math.ceil((double) totalRecords / pageSize);
+
+            currentPage = totalPages;
+
+            loadPatients();
+
+        } catch (Exception e) {
+
+            logger.error("Failed moving to last page", e);
+        }
+    }
     // ================= OPEN FORM =================
     private void openPatientForm() {
         logger.info("Opening patient registration form for userId={}", userId);
@@ -206,15 +240,24 @@ public class DoctorDashboard extends JFrame {
                     userId
             );
 
-            List<Object[]> patients =
+            List<PatientSummary> patients =
                     patientRepo.getPatients(
                             userId,
                             currentPage,
                             pageSize
                     );
 
-            for (Object[] row : patients) {
-                tableModel.addRow(row);
+            for (PatientSummary patient : patients) {
+
+                tableModel.addRow(new Object[]{
+                        patient.patientId(),
+                        patient.name(),
+                        patient.mobile(),
+                        patient.age(),
+                        patient.gender()
+
+                });
+
             }
 
             updatePaginationControls();
@@ -293,7 +336,9 @@ public class DoctorDashboard extends JFrame {
             );
 
             btnPrev.setEnabled(currentPage > 1);
+            btnFirst.setEnabled(currentPage > 1);
 
+            btnLast.setEnabled(currentPage < totalPages);
             btnNext.setEnabled(currentPage < totalPages);
 
         } catch (Exception e) {
@@ -316,10 +361,17 @@ public class DoctorDashboard extends JFrame {
 
         try {
             logger.info("Searching patients for userId={} mobile={}", userId, mobile);
-            List<Object[]> patients = patientRepo.searchPatientsByMobile(userId, mobile);
+            List<PatientSummary> patients = patientRepo.searchPatientsByMobile(userId, mobile);
 
-            for (Object[] row : patients) {
-                tableModel.addRow(row);
+            for (PatientSummary patient : patients) {
+
+                tableModel.addRow(new Object[]{
+                        patient.patientId(),
+                        patient.name(),
+                        patient.mobile(),
+                        patient.age(),
+                        patient.gender()
+                });
             }
             logger.info("Search returned {} records", patients.size());
 

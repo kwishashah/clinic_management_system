@@ -2,7 +2,6 @@
  * Copyright (c) 2026. All rights reserved. contact kwisha.shah2004 for more details.
  */
 package com.neuro.repo.queries;
-
 /**
  * Centralized SQL statements used by the DAO layer.
  *
@@ -10,9 +9,7 @@ package com.neuro.repo.queries;
  * making review, refactoring and future migration (e.g. to a query loader / JOOQ / JPA) easier.
  */
 public final class SqlQueries {
-
     private SqlQueries() {}
-
     // ============================================================
     //  USERS
     // ============================================================

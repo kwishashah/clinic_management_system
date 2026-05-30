@@ -17,7 +17,7 @@ import java.util.Objects;
 import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import com.neuro.model.PatientSummary;
 /** JDBC-backed {@link PatientRepository}. */
 public final class JdbcPatientRepository implements PatientRepository {
 
@@ -117,13 +117,13 @@ public final class JdbcPatientRepository implements PatientRepository {
 
 
     @Override
-    public List<Object[]> getPatients(
+    public List<PatientSummary> getPatients(
             int userId,
             int page,
             int pageSize
     ) throws DatabaseException {
 
-        List<Object[]> list = new ArrayList<>();
+        List<PatientSummary> list = new ArrayList<>();
 
         int offset = (page - 1) * pageSize;
 
@@ -159,13 +159,13 @@ public final class JdbcPatientRepository implements PatientRepository {
 
                 while (rs.next()) {
 
-                    list.add(new Object[]{
+                    list.add(new PatientSummary(
                             rs.getInt("patient_id"),
                             rs.getString("patient_name"),
                             rs.getString("mobile_number"),
                             rs.getInt("age"),
                             rs.getString("gender")
-                    });
+                    ));
                 }
             }
 
@@ -230,8 +230,8 @@ public final class JdbcPatientRepository implements PatientRepository {
         return 0;
     }
     @Override
-    public List<Object[]> searchPatientsByMobile(int userId, String mobile) throws DatabaseException {
-        List<Object[]> list = new ArrayList<>();
+    public List<PatientSummary> searchPatientsByMobile(int userId, String mobile) throws DatabaseException {
+        List<PatientSummary> list = new ArrayList<>();
         Connection con = connectionSupplier.get();
         try (PreparedStatement ps = con.prepareStatement(SqlQueries.PATIENT_SEARCH_BY_MOBILE)) {
             logger.info("Searching patients userId={} mobileLike={}", userId, mobile);
@@ -239,13 +239,13 @@ public final class JdbcPatientRepository implements PatientRepository {
             ps.setString(2, "%" + mobile + "%");
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    list.add(new Object[] {
+                    list.add(new PatientSummary (
                         rs.getInt("patient_id"),
                         rs.getString("patient_name"),
                         rs.getString("mobile_number"),
                         rs.getInt("age"),
                         rs.getString("gender")
-                    });
+                    ));
                 }
             }
         } catch (SQLException e) {

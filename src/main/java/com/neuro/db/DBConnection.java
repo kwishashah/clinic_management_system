@@ -6,8 +6,9 @@ package com.neuro.db;
 import com.neuro.exceptions.DatabaseException;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -19,8 +20,8 @@ import org.apache.logging.log4j.Logger;
 /**
  * Application-wide JDBC connection holder.
  *
- * <p>Loads database credentials from a {@code db.properties} file located next to the running JAR
- * (or the classpath root when running from an IDE), opens a single {@link Connection} the first
+ * <p>Loads database credentials from a {@code db.properties} file located at
+ * {@code ${user.home}/.neuro/config/db.properties}, opens a single {@link Connection} the first
  * time it is requested, and caches it for subsequent callers. All access is synchronized so this
  * class is safe to use from multiple threads.
  */
@@ -50,19 +51,8 @@ public final class DBConnection {
             logger.warn("Error checking connection state, will reconnect", e);
         }
 
-        File jarDir;
-        try {
-            jarDir = new File(DBConnection.class
-                            .getProtectionDomain()
-                            .getCodeSource()
-                            .getLocation()
-                            .toURI())
-                    .getParentFile();
-        } catch (URISyntaxException e) {
-            throw new DatabaseException("Cannot determine JAR location", e);
-        }
-
-        File propsFile = new File(jarDir, "db.properties");
+        Path configPath = Paths.get(System.getProperty("user.home"), ".neuro", "config", "db.properties");
+        File propsFile = configPath.toFile();
         if (!propsFile.exists()) {
             throw new DatabaseException("db.properties not found at: " + propsFile.getAbsolutePath());
         }

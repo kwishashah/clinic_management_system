@@ -134,20 +134,21 @@
                 </configuration>
             </plugin>
 
-            <!-- Copy db.properties next to the built JAR in target/ -->
+            <!-- Copy db.properties to ${user.home}/.neuro/config (does not overwrite existing) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>3.3.1</version>
                 <executions>
                     <execution>
-                        <id>copy-db-properties</id>
+                        <id>copy-db-properties-to-user-home</id>
                         <phase>prepare-package</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.build.directory}</outputDirectory>
+                            <outputDirectory>${user.home}/.neuro/config</outputDirectory>
+                            <overwrite>false</overwrite>
                             <resources>
                                 <resource>
                                     <directory>${project.basedir}/src/main/resources</directory>

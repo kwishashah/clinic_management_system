@@ -11,7 +11,7 @@ import java.sql.Date;
 import javax.swing.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import java.awt.event.KeyEvent;
 public class SessionFormDialog extends JDialog {
 
     private static final Logger logger = LogManager.getLogger(SessionFormDialog.class);
@@ -76,6 +76,8 @@ public class SessionFormDialog extends JDialog {
         } else {
             loadSessionData();
         }
+
+        registerEscapeKey();
     }
 
     private void initComponents() {
@@ -149,7 +151,7 @@ public class SessionFormDialog extends JDialog {
         btnSave.addActionListener(this::handleSave);
 
         bottom.add(btnSave, BorderLayout.SOUTH);
-
+        getRootPane().setDefaultButton(btnSave);
         mainPanel.add(bottom, BorderLayout.SOUTH);
 
         add(mainPanel);
@@ -317,5 +319,13 @@ public class SessionFormDialog extends JDialog {
 
             JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
         }
+    }
+    private void registerEscapeKey() {
+
+        getRootPane()
+                .registerKeyboardAction(
+                        e -> dispose(),
+                        KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+                        JComponent.WHEN_IN_FOCUSED_WINDOW);
     }
 }

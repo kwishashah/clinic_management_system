@@ -170,4 +170,79 @@ public final class JdbcPatientRepository implements PatientRepository {
         logger.info("Search returned {} patients", list.size());
         return list;
     }
+    @Override
+    public int getPatientCount(int userId) throws DatabaseException {
+
+        Connection con = connectionSupplier.get();
+
+        try (PreparedStatement ps =
+                     con.prepareStatement(SqlQueries.PATIENT_COUNT_BY_USER)) {
+
+            ps.setInt(1, userId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+
+        } catch (SQLException e) {
+
+            logger.error("Failed counting patients for userId={}", userId, e);
+
+            throw new DatabaseException(
+                    "Failed counting patients for userId=" + userId,
+                    e);
+        }
+
+        return 0;
+    }
+    @Override
+    public List<Object[]> getPatientsPage(
+            int userId,
+            int offset,
+            int limit)
+            throws DatabaseException {
+
+        List<Object[]> list = new ArrayList<>();
+
+        Connection con = connectionSupplier.get();
+
+        try (PreparedStatement ps =
+                     con.prepareStatement(
+                             SqlQueries.PATIENT_SELECT_PAGE_BY_USER)) {
+
+            ps.setInt(1, userId);
+            ps.setInt(2, limit);
+            ps.setInt(3, offset);
+
+            try (ResultSet rs = ps.executeQuery()) {
+
+                while (rs.next()) {
+
+                    list.add(new Object[] {
+                            rs.getInt("patient_id"),
+                            rs.getString("patient_name"),
+                            rs.getString("mobile_number"),
+                            rs.getInt("age"),
+                            rs.getString("gender")
+                    });
+                }
+            }
+
+        } catch (SQLException e) {
+
+            logger.error(
+                    "Failed loading page of patients for userId={}",
+                    userId,
+                    e);
+
+            throw new DatabaseException(
+                    "Failed loading patient page for userId=" + userId,
+                    e);
+        }
+
+        return list;
+    }
 }

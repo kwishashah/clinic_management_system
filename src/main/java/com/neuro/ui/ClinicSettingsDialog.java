@@ -10,6 +10,7 @@ import java.io.File;
 import javax.swing.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import java.awt.event.KeyEvent;
 
 public class ClinicSettingsDialog extends JDialog {
     private static final Logger logger = LogManager.getLogger(ClinicSettingsDialog.class);
@@ -56,7 +57,7 @@ public class ClinicSettingsDialog extends JDialog {
 
         // 🔹 Save button
         JButton saveBtn = new JButton("Save");
-
+        getRootPane().setDefaultButton(saveBtn);
         add(panel, BorderLayout.CENTER);
         add(saveBtn, BorderLayout.SOUTH);
 
@@ -65,6 +66,7 @@ public class ClinicSettingsDialog extends JDialog {
         saveBtn.addActionListener(e -> save());
 
         loadExisting();
+        registerEscapeKey();
     }
 
     private void chooseLogo() {
@@ -187,4 +189,13 @@ public class ClinicSettingsDialog extends JDialog {
             logger.error("Failed loading clinic settings", e);
         }
     }
+    private void registerEscapeKey() {
+
+        getRootPane()
+                .registerKeyboardAction(
+                        e -> dispose(),
+                        KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+                        JComponent.WHEN_IN_FOCUSED_WINDOW);
+    }
+
 }

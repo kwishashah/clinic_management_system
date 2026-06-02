@@ -29,6 +29,16 @@ public class DoctorDashboard extends JFrame {
 
     private final AppContext context;
     private final PatientRepository patientRepo;
+    private static final int PAGE_SIZE = 20;
+
+    private int currentPage = 1;
+    private int totalPages = 1;
+
+    private JLabel lblPageInfo;
+    private JButton btnFirst;
+    private JButton btnPrev;
+    private JButton btnNext;
+    private JButton btnLast;
 
     public DoctorDashboard(int userId, AppContext context) {
         this.context = context;
@@ -118,7 +128,27 @@ public class DoctorDashboard extends JFrame {
         mainPanel.add(new JScrollPane(tblPatients), BorderLayout.CENTER);
 
         JButton btnView = new JButton("View Details");
-        mainPanel.add(btnView, BorderLayout.SOUTH);
+        btnView.setMnemonic(KeyEvent.VK_V);
+
+        btnFirst = new JButton("⏮");
+        btnPrev = new JButton("◀");
+        btnNext = new JButton("▶");
+        btnLast = new JButton("⏭");
+
+        lblPageInfo = new JLabel("Page 1 of 1");
+
+        JPanel paginationPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        paginationPanel.add(btnFirst);
+        paginationPanel.add(btnPrev);
+        paginationPanel.add(lblPageInfo);
+        paginationPanel.add(btnNext);
+        paginationPanel.add(btnLast);
+
+        JPanel southPanel = new JPanel(new BorderLayout());
+        southPanel.add(btnView, BorderLayout.WEST);
+        southPanel.add(paginationPanel, BorderLayout.CENTER);
+
+        mainPanel.add(southPanel, BorderLayout.SOUTH);
 
         // ================= ACTIONS =================
         btnSearch.addActionListener(e -> searchPatients());
@@ -127,7 +157,29 @@ public class DoctorDashboard extends JFrame {
         btnAddPatient.addActionListener(e -> openPatientForm());
 
         btnLogout.addActionListener(e -> logout());
+        btnFirst.addActionListener(e -> {
+            currentPage = 1;
+            loadPatientsPage();
+        });
 
+        btnPrev.addActionListener(e -> {
+            if (currentPage > 1) {
+                currentPage--;
+                loadPatientsPage();
+            }
+        });
+
+        btnNext.addActionListener(e -> {
+            if (currentPage < totalPages) {
+                currentPage++;
+                loadPatientsPage();
+            }
+        });
+
+        btnLast.addActionListener(e -> {
+            currentPage = totalPages;
+            loadPatientsPage();
+        });
         settingsBtn.addActionListener(e -> {
             ClinicSettingsDialog dialog = new ClinicSettingsDialog();
             dialog.setModal(true);
@@ -142,7 +194,7 @@ public class DoctorDashboard extends JFrame {
             }
         });
 
-        loadAllPatients();
+        loadPatientsPage();
         logger.info("Dashboard initialized successfully for userId={}", userId);
     }
 
@@ -154,7 +206,8 @@ public class DoctorDashboard extends JFrame {
         form.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent e) {
-                loadAllPatients();
+                currentPage=1;
+                loadPatientsPage();
             }
         });
 
@@ -162,24 +215,47 @@ public class DoctorDashboard extends JFrame {
     }
 
     // ================= LOAD ALL =================
-    private void loadAllPatients() {
+    private void loadPatientsPage() {
 
         tableModel.setRowCount(0);
 
         try {
-            logger.info("Loading all patients for userId={}", userId);
 
-            List<Object[]> patients = patientRepo.getAllPatients(userId);
+            int totalRecords = patientRepo.getPatientCount(userId);
+
+            totalPages = (int) Math.ceil((double) totalRecords / PAGE_SIZE);
+
+            if (totalPages == 0) {
+                totalPages = 1;
+            }
+
+            int offset = (currentPage - 1) * PAGE_SIZE;
+
+            List<Object[]> patients =
+                    patientRepo.getPatientsPage(userId, offset, PAGE_SIZE);
 
             for (Object[] row : patients) {
                 tableModel.addRow(row);
             }
-            logger.info("Loaded {} patients into dashboard", patients.size());
+
+            lblPageInfo.setText(
+                    "Page " + currentPage + " of " + totalPages);
+
+            updatePaginationButtons();
 
         } catch (Exception ex) {
-            logger.error("Failed loading patients for userId={}", userId, ex);
-            JOptionPane.showMessageDialog(this, "Error loading patients:\n" + ex.getMessage());
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Error loading patients:\n" + ex.getMessage());
         }
+    }
+    private void updatePaginationButtons() {
+
+        btnFirst.setEnabled(currentPage > 1);
+        btnPrev.setEnabled(currentPage > 1);
+
+        btnNext.setEnabled(currentPage < totalPages);
+        btnLast.setEnabled(currentPage < totalPages);
     }
 
     // ================= SEARCH =================
@@ -188,7 +264,7 @@ public class DoctorDashboard extends JFrame {
         String mobile = txtSearchMobile.getText().trim();
 
         if (mobile.isEmpty()) {
-            loadAllPatients();
+            loadPatientsPage();
             return;
         }
 

@@ -52,7 +52,9 @@ public interface PatientRepository {
 
     /** Returns a summary view of every patient owned by the given user. */
     List<Object[]> getAllPatients(int userId) throws DatabaseException;
+    List<Object[]> getPatientsPage(int userId, int offset, int limit);
 
+    int getPatientCount(int userId);
     /** Searches the user's patients by mobile-number fragment. */
     List<Object[]> searchPatientsByMobile(int userId, String mobile) throws DatabaseException;
 }

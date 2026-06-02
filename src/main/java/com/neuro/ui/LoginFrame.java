@@ -69,6 +69,7 @@ public class LoginFrame extends JFrame {
         panel.add(btnSignup, gbc);
 
         btnLogin.addActionListener(e -> login());
+        getRootPane().setDefaultButton(btnLogin);
 
         // 🔥 THIS IS WHERE IT GOES
         btnSignup.addActionListener(e -> new SignupFrame(this, context).setVisible(true));

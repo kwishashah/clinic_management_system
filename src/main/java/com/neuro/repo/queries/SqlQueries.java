@@ -47,6 +47,17 @@ public final class SqlQueries {
                     + "FROM PatientHistory "
                     + "WHERE user_id=? "
                     + "ORDER BY patient_id DESC";
+    public static final String PATIENT_COUNT_BY_USER =
+            "SELECT COUNT(*) "
+                    + "FROM PatientHistory "
+                    + "WHERE user_id=?";
+
+    public static final String PATIENT_SELECT_PAGE_BY_USER =
+            "SELECT patient_id, patient_name, mobile_number, age, gender "
+                    + "FROM PatientHistory "
+                    + "WHERE user_id=? "
+                    + "ORDER BY patient_id DESC "
+                    + "LIMIT ? OFFSET ?";
 
     public static final String PATIENT_SEARCH_BY_MOBILE = "SELECT patient_id, patient_name, mobile_number, age, gender "
             + "FROM PatientHistory "

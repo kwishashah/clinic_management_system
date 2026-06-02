@@ -28,7 +28,7 @@ import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-
+import java.awt.event.KeyEvent;
 public class PatientDetailsFrame extends JFrame {
     private static final Logger logger = LogManager.getLogger(PatientDetailsFrame.class);
     private JTextArea textArea;
@@ -150,6 +150,7 @@ public class PatientDetailsFrame extends JFrame {
         // ================= LOAD DATA =================
         loadPatientDetails();
         loadSessions();
+        registerEscapeKey();
     }
 
     // ================= LOAD SESSIONS =================
@@ -540,4 +541,15 @@ public class PatientDetailsFrame extends JFrame {
         }
         return sb.toString();
     }
+    private void registerEscapeKey() {
+
+        getRootPane().registerKeyboardAction(
+                e -> {
+                    parentFrame.setVisible(true);
+                    dispose();
+                },
+                KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+                JComponent.WHEN_IN_FOCUSED_WINDOW);
+    }
+
 }

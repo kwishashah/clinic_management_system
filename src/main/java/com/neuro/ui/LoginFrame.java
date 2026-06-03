@@ -9,7 +9,7 @@ import java.awt.*;
 import javax.swing.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import com.neuro.ui.DialogUtil;
 public class LoginFrame extends JFrame {
 
     private JTextField txtUsername;
@@ -26,6 +26,7 @@ public class LoginFrame extends JFrame {
         setSize(450, 320);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setResizable(false);
 
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
@@ -87,7 +88,8 @@ public class LoginFrame extends JFrame {
             // empty credentials
             if (username.isEmpty() || password.isEmpty()) {
                 logger.warn("Login attempted with empty credentials");
-                JOptionPane.showMessageDialog(this, "Enter username and password");
+
+                DialogUtil.warning(this, "Enter username and password");
                 return;
             }
 
@@ -111,15 +113,15 @@ public class LoginFrame extends JFrame {
             } else {
 
                 logger.warn("Login failed for username={}", username);
-
-                JOptionPane.showMessageDialog(this, "Invalid credentials");
+                DialogUtil.error(this, "Invalid credentials");
+                //JOptionPane.showMessageDialog(this, "Invalid credentials",getClinicIcon());
             }
 
         } catch (Exception e) {
 
             logger.error("Login error for username={}", txtUsername.getText(), e);
+            DialogUtil.error(this, "Unable to login");
 
-            JOptionPane.showMessageDialog(this, "Login error: " + e.getMessage());
         }
     }
 }

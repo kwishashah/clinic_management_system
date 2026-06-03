@@ -32,6 +32,7 @@ public class SignupFrame extends JDialog {
         setSize(450, 320);
         setLocationRelativeTo(parent);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setResizable(false);
 
         initUI();
     }
@@ -123,39 +124,39 @@ public class SignupFrame extends JDialog {
             String confirm = new String(txtConfirmPassword.getPassword());
 
             if (username.isEmpty() || password.isEmpty() || confirm.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "All fields are required");
+                DialogUtil.warning(this, "All fields are required");
                 return;
             }
 
             if (!password.equals(confirm)) {
-                JOptionPane.showMessageDialog(this, "Passwords do not match");
+                DialogUtil.warning(this, "Passwords do not match");
                 return;
             }
 
             if (password.length() < 5) {
-                JOptionPane.showMessageDialog(this, "Password must be at least 5 characters");
+                DialogUtil.warning(this, "Password must be at least 5 characters");
                 return;
             }
 
             // ✅ CHECK FIRST (this is the missing piece)
             if (userRepo.userExists(username)) {
-                JOptionPane.showMessageDialog(this, "Username already exists");
+                DialogUtil.warning(this, "Username already exists");
                 return;
             }
 
             boolean success = userRepo.insertUser(username, password);
             int userId = userRepo.getUserId(username);
             if (success) {
-                JOptionPane.showMessageDialog(this, "Account created successfully!");
+                DialogUtil.info(this, "Account created successfully");
                 dispose();
                 new DoctorDashboard(userId, context).setVisible(true);
             } else {
-                JOptionPane.showMessageDialog(this, "Error creating account");
+                DialogUtil.error(this, "Unable to create account");
             }
 
         } catch (Exception e) {
             logger.error("Signup failed", e);
-            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+            DialogUtil.error(this, "Unable to create account");
         }
     }
 }

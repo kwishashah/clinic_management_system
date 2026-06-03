@@ -7,7 +7,7 @@ import java.awt.*;
 import javax.swing.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import com.neuro.ui.DialogUtil;
 public class LicenseDialog extends JDialog {
 
     private static final Logger logger = LogManager.getLogger(LicenseDialog.class);
@@ -52,12 +52,12 @@ public class LicenseDialog extends JDialog {
                 success = true;
                 dispose();
             } else {
-                JOptionPane.showMessageDialog(this, "Invalid or expired license");
+                DialogUtil.warning(this, "Invalid or expired license");
             }
 
         } catch (Exception e) {
             logger.error("License validation failed", e);
-            JOptionPane.showMessageDialog(this, "Error validating license");
+            DialogUtil.error(this, "Error validating license");
         }
     }
 

@@ -6,7 +6,7 @@ package com.neuro.license;
 import javax.swing.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import com.neuro.ui.DialogUtil;
 public class LicenseLauncher {
 
     private static final Logger logger = LogManager.getLogger(LicenseLauncher.class);
@@ -28,11 +28,11 @@ public class LicenseLauncher {
 
                 LicenseManager.saveLicense(license);
 
-                JOptionPane.showMessageDialog(null, "License generated successfully!");
+                DialogUtil.info(null, "License generated successfully");
 
             } catch (Exception e) {
                 logger.error("License generation failed", e);
-                JOptionPane.showMessageDialog(null, "License generation failed");
+                DialogUtil.error(null, "License generation failed");
             }
         });
     }

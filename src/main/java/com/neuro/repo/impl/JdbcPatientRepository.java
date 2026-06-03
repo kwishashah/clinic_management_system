@@ -17,7 +17,7 @@ import java.util.Objects;
 import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import java.sql.SQLIntegrityConstraintViolationException;
 /** JDBC-backed {@link PatientRepository}. */
 public final class JdbcPatientRepository implements PatientRepository {
 

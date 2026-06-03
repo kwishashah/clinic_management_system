@@ -53,6 +53,7 @@ public class PatientDetailsFrame extends JFrame {
         setSize(900, 700);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setResizable(false);
 
         setLayout(new BorderLayout());
 
@@ -91,11 +92,11 @@ public class PatientDetailsFrame extends JFrame {
                     Desktop.getDesktop().open(new java.io.File(reportPath));
                 } else {
                     logger.warn("No report available for patientId={}", patientId);
-                    JOptionPane.showMessageDialog(this, "No report available");
+                    DialogUtil.warning(this, "No report available");
                 }
             } catch (Exception ex) {
                 logger.error("Failed opening report for patientId={}", patientId, ex);
-                JOptionPane.showMessageDialog(this, "Cannot open file");
+                DialogUtil.error(this, "Cannot open file");
             }
         });
 
@@ -295,7 +296,7 @@ public class PatientDetailsFrame extends JFrame {
 
         } catch (Exception e) {
             logger.error("Error loading patient details patientId={}", patientId, e);
-            JOptionPane.showMessageDialog(this, "Error loading details:\n" + e.getMessage());
+            DialogUtil.error(this, "Unable to load patient details");
         }
     }
 
@@ -485,12 +486,12 @@ public class PatientDetailsFrame extends JFrame {
                 logger.info("PDF exported successfully {}", path);
             }
 
-            JOptionPane.showMessageDialog(this, "PDF Saved!");
+            DialogUtil.info(this, "PDF saved");
 
         } catch (Exception e) {
             // e.printStackTrace();
             logger.error("PDF export failed for patientId={}", patientId, e);
-            JOptionPane.showMessageDialog(this, "Error creating PDF");
+            DialogUtil.error(this,"PDF export failed");
         }
     }
 

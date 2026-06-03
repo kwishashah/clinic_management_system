@@ -11,7 +11,7 @@ import java.awt.event.KeyEvent;
 import javax.swing.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import java.sql.SQLIntegrityConstraintViolationException;
 public class PatientHistoryFormMySQL extends JFrame {
     private static final Logger logger = LogManager.getLogger(PatientHistoryFormMySQL.class);
     private JTextField txtName, txtMobile, txtAge, txtOccupation;
@@ -46,7 +46,7 @@ public class PatientHistoryFormMySQL extends JFrame {
         setSize(750, 750);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-
+        setResizable(false);
 
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
@@ -58,10 +58,6 @@ public class PatientHistoryFormMySQL extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         int y = 0;
-
-
-
-
         gbc.gridwidth = 1;
 
         // ===== Fields =====
@@ -122,17 +118,14 @@ public class PatientHistoryFormMySQL extends JFrame {
         y = addRow(panel, gbc, y, "Address", txtAddress);
         y = addRow(panel, gbc, y, "Occupation", txtOccupation);
         JPanel physicalPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
-
+        physicalPanel.setBorder(null);
+        physicalPanel.setOpaque(false);
         txtBloodGroup.setColumns(5);
-
-
         physicalPanel.add(new JLabel("Blood"));
         physicalPanel.add(txtBloodGroup);
-
         physicalPanel.add(new JLabel("Height"));
         physicalPanel.add(txtHeight);
         physicalPanel.add(new JLabel("cm"));
-
         physicalPanel.add(new JLabel("Weight"));
         physicalPanel.add(txtWeight);
         physicalPanel.add(new JLabel("kg"));
@@ -147,7 +140,8 @@ public class PatientHistoryFormMySQL extends JFrame {
 
         // ===== Pain Points =====
         JPanel painPanel = new JPanel(new GridLayout(0, 2));
-
+        painPanel.setBorder(null);
+        painPanel.setOpaque(false);
         String[] names = {
             "Pan", "Gas", "GasI", "WD", "Gal", "Spl", "Liv", "Mu", "Rtov", "Ltov", "Dys", "Const", "Liv0", "Mu0",
             "Folic", "Thia", "B12", "Nia"
@@ -173,6 +167,8 @@ public class PatientHistoryFormMySQL extends JFrame {
 
         // ===== Vitals =====
         JPanel vitals = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        vitals.setBorder(null);
+        vitals.setOpaque(false);
         vitals.add(new JLabel("BP"));
         vitals.add(txtBP);
         vitals.add(new JLabel("Pulse"));
@@ -326,7 +322,7 @@ public class PatientHistoryFormMySQL extends JFrame {
 
             if (txtName.getText().trim().isEmpty()) {
                 logger.warn("Save blocked: patient name empty");
-                JOptionPane.showMessageDialog(this, "Patient name required");
+                DialogUtil.warning(this, "Patient name required");
                 return;
             }
 
@@ -386,16 +382,33 @@ public class PatientHistoryFormMySQL extends JFrame {
                     new java.sql.Timestamp(System.currentTimeMillis()));
 
             logger.info("Patient saved successfully name={} userId={}", txtName.getText(), userId);
-
-            JOptionPane.showMessageDialog(this, "Saved!");
+            DialogUtil.info(this, "Saved!");
             dispose();
 
         } catch (NumberFormatException e) {
             logger.warn("Invalid numeric input while saving patient", e);
-            JOptionPane.showMessageDialog(this, "Invalid age/height/weight values");
-        } catch (Exception e) {
-            logger.error("Patient save failed userId={}", userId, e);
-            JOptionPane.showMessageDialog(this, e.getMessage());
+            DialogUtil.error(this, "Invalid age, height or weight");
+        } catch (SQLIntegrityConstraintViolationException e) {
+
+            logger.warn(
+                    "Duplicate patient mobile={} userId={}",
+                    txtMobile.getText(),
+                    userId);
+
+            DialogUtil.warning(
+                    this,
+                    "A patient with this mobile number already exists.");
+        }
+        catch (Exception e) {
+
+            logger.error(
+                    "Patient save failed userId={}",
+                    userId,
+                    e);
+
+            DialogUtil.error(
+                    this,
+                    "Unable to save patient details.");
         }
     }
 
@@ -418,25 +431,19 @@ public class PatientHistoryFormMySQL extends JFrame {
         gbc.gridx = 1;
 
         if (field instanceof JTextArea area) {
-
-            JScrollPane scrollPane = new JScrollPane(area);
-
-            // Keep the same border style everywhere
-            scrollPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-
-            panel.add(scrollPane, gbc);
-
+            JScrollPane sp = new JScrollPane(area);
+            sp.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+            panel.add(sp, gbc);
+        } else if (field instanceof JPanel) {
+            panel.add(field, gbc);   // NO BORDER for panels
         } else {
-
-            if (field instanceof JComponent comp) {
-                comp.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-            }
-
+            ((JComponent) field).setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
             panel.add(field, gbc);
         }
 
         return y + 1;
     }
+
     private void registerEscapeKey() {
 
         getRootPane()

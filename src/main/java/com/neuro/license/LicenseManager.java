@@ -18,7 +18,7 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.swing.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import com.neuro.ui.DialogUtil;
 /**
  * Owns all license-related operations: trusted-date retrieval, machine fingerprinting, key parsing
  * and validation, persistent trial tracking, and the top-level {@link #checkLicenseOrExit()} flow.
@@ -271,14 +271,14 @@ public class LicenseManager {
             if (key == null) {
 
                 if (isTrialValid()) {
-                    JOptionPane.showMessageDialog(
+                    long daysLeft =
+                            7 - ChronoUnit.DAYS.between(
+                                    LocalDate.parse(Files.readString(TRIAL_FILE).trim()),
+                                    getTrustedDate());
+
+                    DialogUtil.info(
                             null,
-                            "Trial Mode Active\nDays left: "
-                                    + (7
-                                            - ChronoUnit.DAYS.between(
-                                                    LocalDate.parse(Files.readString(TRIAL_FILE)
-                                                            .trim()),
-                                                    getTrustedDate())));
+                            "Trial Mode Active\nDays left: " + daysLeft);
                     return true;
                 }
 
@@ -301,7 +301,7 @@ public class LicenseManager {
 
         } catch (Exception e) {
             logger.error("License check failed", e);
-            JOptionPane.showMessageDialog(null, "License Error");
+            DialogUtil.error(null, "License error");
             return false;
         }
     }

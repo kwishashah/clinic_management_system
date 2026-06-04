@@ -19,6 +19,7 @@ import javax.swing.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.neuro.ui.DialogUtil;
+import com.neuro.constants.*;
 /**
  * Owns all license-related operations: trusted-date retrieval, machine fingerprinting, key parsing
  * and validation, persistent trial tracking, and the top-level {@link #checkLicenseOrExit()} flow.
@@ -301,7 +302,7 @@ public class LicenseManager {
 
         } catch (Exception e) {
             logger.error("License check failed", e);
-            DialogUtil.error(null, "License error");
+            DialogUtil.error(null,ErrorConstants.LICENSE_ERROR );
             return false;
         }
     }

@@ -1,3 +1,4 @@
+package com.neuro.util;
 public final class ErrorUtil {
 
     private ErrorUtil() {}

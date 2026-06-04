@@ -15,7 +15,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import com.neuro.constants.*;
 public class DoctorDashboard extends JFrame {
 
     private JTextField txtSearchMobile;
@@ -245,7 +245,7 @@ public class DoctorDashboard extends JFrame {
             updatePaginationButtons();
 
         } catch (Exception ex) {
-            DialogUtil.error(this, "Error loading patients");
+            DialogUtil.error(this, ErrorConstants.ERROR_LOADING_PATIENTS);
         }
     }
     private void updatePaginationButtons() {
@@ -280,7 +280,7 @@ public class DoctorDashboard extends JFrame {
 
         } catch (Exception ex) {
             logger.error("Patient search failed for mobile={}", mobile, ex);
-            DialogUtil.error(this, "Search failed");
+            DialogUtil.error(this, ErrorConstants.SEARCH_FAILED);
         }
     }
 
@@ -291,7 +291,7 @@ public class DoctorDashboard extends JFrame {
 
         if (row == -1) {
             logger.warn("View details attempted without selecting patient");
-            DialogUtil.warning(this, "Please select a patient");
+            DialogUtil.warning(this,ErrorConstants.SELECT_PATIENT);
             return;
         }
 

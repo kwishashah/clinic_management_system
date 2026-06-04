@@ -5,6 +5,8 @@ package com.neuro.ui;
 
 import com.neuro.app.AppContext;
 import com.neuro.config.ClinicConfig;
+import com.neuro.constants.ErrorConstants;
+import com.neuro.constants.MessageConstants;
 import com.neuro.repo.queries.SqlQueries;
 import com.neuro.db.DBConnection;
 import com.neuro.model.ClinicInfo;
@@ -92,11 +94,11 @@ public class PatientDetailsFrame extends JFrame {
                     Desktop.getDesktop().open(new java.io.File(reportPath));
                 } else {
                     logger.warn("No report available for patientId={}", patientId);
-                    DialogUtil.warning(this, "No report available");
+                    DialogUtil.warning(this, ErrorConstants.NO_REPORT_AVAILABLE);
                 }
             } catch (Exception ex) {
                 logger.error("Failed opening report for patientId={}", patientId, ex);
-                DialogUtil.error(this, "Cannot open file");
+                DialogUtil.error(this,ErrorConstants.CANNOT_OPEN_FILE);
             }
         });
 
@@ -296,7 +298,7 @@ public class PatientDetailsFrame extends JFrame {
 
         } catch (Exception e) {
             logger.error("Error loading patient details patientId={}", patientId, e);
-            DialogUtil.error(this, "Unable to load patient details");
+            DialogUtil.error(this, ErrorConstants.UNABLE_TO_LOAD_PATIENT_DETAILS);
         }
     }
 
@@ -486,12 +488,12 @@ public class PatientDetailsFrame extends JFrame {
                 logger.info("PDF exported successfully {}", path);
             }
 
-            DialogUtil.info(this, "PDF saved");
+            DialogUtil.info(this, MessageConstants.SAVED);
 
         } catch (Exception e) {
             // e.printStackTrace();
             logger.error("PDF export failed for patientId={}", patientId, e);
-            DialogUtil.error(this,"PDF export failed");
+            DialogUtil.error(this,ErrorConstants.PDF_EXPORT_FAILED);
         }
     }
 

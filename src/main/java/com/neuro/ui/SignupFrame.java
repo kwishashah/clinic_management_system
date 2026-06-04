@@ -4,6 +4,8 @@
 package com.neuro.ui;
 
 import com.neuro.app.AppContext;
+import com.neuro.constants.ErrorConstants;
+import com.neuro.constants.MessageConstants;
 import com.neuro.repo.UserRepository;
 import java.awt.*;
 import javax.swing.*;
@@ -124,7 +126,7 @@ public class SignupFrame extends JDialog {
             String confirm = new String(txtConfirmPassword.getPassword());
 
             if (username.isEmpty() || password.isEmpty() || confirm.isEmpty()) {
-                DialogUtil.warning(this, "All fields are required");
+                DialogUtil.warning(this, ErrorConstants.ALL_FIELDS_REQD);
                 return;
             }
 
@@ -134,29 +136,29 @@ public class SignupFrame extends JDialog {
             }
 
             if (password.length() < 5) {
-                DialogUtil.warning(this, "Password must be at least 5 characters");
+                DialogUtil.warning(this, ErrorConstants.PASSWORDS_LENGTH);
                 return;
             }
 
             // ✅ CHECK FIRST (this is the missing piece)
             if (userRepo.userExists(username)) {
-                DialogUtil.warning(this, "Username already exists");
+                DialogUtil.warning(this, ErrorConstants.USERNAME_EXISTS);
                 return;
             }
 
             boolean success = userRepo.insertUser(username, password);
             int userId = userRepo.getUserId(username);
             if (success) {
-                DialogUtil.info(this, "Account created successfully");
+                DialogUtil.info(this, MessageConstants.ACC_CREATED);
                 dispose();
                 new DoctorDashboard(userId, context).setVisible(true);
             } else {
-                DialogUtil.error(this, "Unable to create account");
+                DialogUtil.error(this,ErrorConstants.UNABLE_TO_CREATE_ACCOUNT);
             }
 
         } catch (Exception e) {
             logger.error("Signup failed", e);
-            DialogUtil.error(this, "Unable to create account");
+            DialogUtil.error(this, ErrorConstants.UNABLE_TO_CREATE_ACCOUNT);
         }
     }
 }

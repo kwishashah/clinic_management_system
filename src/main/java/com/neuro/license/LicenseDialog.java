@@ -5,6 +5,8 @@ package com.neuro.license;
 
 import java.awt.*;
 import javax.swing.*;
+
+import com.neuro.constants.ErrorConstants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.neuro.ui.DialogUtil;
@@ -52,12 +54,12 @@ public class LicenseDialog extends JDialog {
                 success = true;
                 dispose();
             } else {
-                DialogUtil.warning(this, "Invalid or expired license");
+                DialogUtil.warning(this, ErrorConstants.INVALID_LICENSE);
             }
 
         } catch (Exception e) {
             logger.error("License validation failed", e);
-            DialogUtil.error(this, "Error validating license");
+            DialogUtil.error(this, ErrorConstants.ERROR_VALIDATING_LICENSE);
         }
     }
 

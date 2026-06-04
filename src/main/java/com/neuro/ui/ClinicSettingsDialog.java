@@ -11,7 +11,7 @@ import javax.swing.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import java.awt.event.KeyEvent;
-
+import com.neuro.constants.*;
 public class ClinicSettingsDialog extends JDialog {
     private static final Logger logger = LogManager.getLogger(ClinicSettingsDialog.class);
     private JTextField nameField;
@@ -89,7 +89,7 @@ public class ClinicSettingsDialog extends JDialog {
             if (!(path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".jpeg"))) {
 
                 logger.warn("Invalid logo format selected={}", file.getName());
-                DialogUtil.warning(this, "Invalid image. Use PNG or JPG");
+                DialogUtil.warning(this, ErrorConstants.INVALID_IMAGE);
                 return;
             }
 
@@ -110,7 +110,7 @@ public class ClinicSettingsDialog extends JDialog {
             } catch (Exception e) {
 
                 logger.error("Failed loading logo preview", e);
-                DialogUtil.error(this, "Unable to load image");
+                DialogUtil.error(this, ErrorConstants.UNABLE_TO_LOAD_LOGO);
             }
 
         } else {
@@ -127,7 +127,7 @@ public class ClinicSettingsDialog extends JDialog {
 
             if (clinicName.isEmpty()) {
                 logger.warn("Save blocked: clinic name empty");
-                DialogUtil.warning(this, "Clinic name is required");
+                DialogUtil.warning(this,ErrorConstants.CLINIC_NAME_REQD);
                 return;
             }
 
@@ -138,11 +138,11 @@ public class ClinicSettingsDialog extends JDialog {
             ClinicConfig.save(info);
 
             logger.info("Clinic settings saved successfully");
-            DialogUtil.info(this, "Settings saved successfully");
+            DialogUtil.info(this, MessageConstants.SAVED);
             dispose();
         } catch (Exception e) {
             logger.error("Clinic settings save failed", e);
-            DialogUtil.error(this, "Unable to save settings");
+            DialogUtil.error(this, ErrorConstants.UNABLE_TO_SAVE_SETTINGS);
         }
     }
 

@@ -12,6 +12,8 @@ import javax.swing.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import java.sql.SQLIntegrityConstraintViolationException;
+import com.neuro.constants.MessageConstants;
+import com.neuro.constants.ErrorConstants;
 public class PatientHistoryFormMySQL extends JFrame {
     private static final Logger logger = LogManager.getLogger(PatientHistoryFormMySQL.class);
     private JTextField txtName, txtMobile, txtAge, txtOccupation;
@@ -322,7 +324,7 @@ public class PatientHistoryFormMySQL extends JFrame {
 
             if (txtName.getText().trim().isEmpty()) {
                 logger.warn("Save blocked: patient name empty");
-                DialogUtil.warning(this, "Patient name required");
+                DialogUtil.warning(this, ErrorConstants.PATIENT_NAME_REQD);
                 return;
             }
 
@@ -382,12 +384,12 @@ public class PatientHistoryFormMySQL extends JFrame {
                     new java.sql.Timestamp(System.currentTimeMillis()));
 
             logger.info("Patient saved successfully name={} userId={}", txtName.getText(), userId);
-            DialogUtil.info(this, "Saved!");
+            DialogUtil.info(this, MessageConstants.SAVED);
             dispose();
 
         } catch (NumberFormatException e) {
             logger.warn("Invalid numeric input while saving patient", e);
-            DialogUtil.error(this, "Invalid age, height or weight");
+            DialogUtil.error(this, ErrorConstants.INVALID_AGE_HEIGHT_WEIGHT);
         } catch (SQLIntegrityConstraintViolationException e) {
 
             logger.warn(
@@ -396,8 +398,7 @@ public class PatientHistoryFormMySQL extends JFrame {
                     userId);
 
             DialogUtil.warning(
-                    this,
-                    "A patient with this mobile number already exists.");
+                    this,ErrorConstants.DUPLICATE_MOBILE);
         }
         catch (Exception e) {
 
@@ -407,8 +408,7 @@ public class PatientHistoryFormMySQL extends JFrame {
                     e);
 
             DialogUtil.error(
-                    this,
-                    "Unable to save patient details.");
+                    this,ErrorConstants.UNABLE_TO_SAVE_PATIENT);
         }
     }
 

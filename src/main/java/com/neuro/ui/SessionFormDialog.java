@@ -12,6 +12,7 @@ import javax.swing.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import java.awt.event.KeyEvent;
+import com.neuro.constants.*;
 public class SessionFormDialog extends JDialog {
 
     private static final Logger logger = LogManager.getLogger(SessionFormDialog.class);
@@ -237,7 +238,7 @@ public class SessionFormDialog extends JDialog {
         } catch (Exception e) {
 
             logger.error("Error loading session sessionId={} patientId={}", sessionId, patientId, e);
-            DialogUtil.error(this, "Unable to load session");
+            DialogUtil.error(this, ErrorConstants.UNABLE_TO_LOAD_SESSION);
         }
     }
 
@@ -293,14 +294,14 @@ public class SessionFormDialog extends JDialog {
                 sessionRepo.addSession(patientId, sessionNo, sqlDate, treatment, pain, "", summary);
 
                 logger.info("Session added successfully patientId={} sessionNo={}", patientId, sessionNo);
-                DialogUtil.info(this, "Session added");
+                DialogUtil.info(this, MessageConstants.SESSION_ADDED);
 
             } else {
 
                 logger.info("Updating sessionId={} patientId={}", sessionId, patientId);
                 sessionRepo.updateSession(sessionId, sessionNo, sqlDate, treatment, pain, "", summary);
                 logger.info("Session updated successfully sessionId={}", sessionId);
-                DialogUtil.info(this, "Session updated successfully");
+                DialogUtil.info(this, MessageConstants.SESSION_UPDATED);
             }
             logger.info("Refreshing sessions grid for patientId={}", patientId);
             parentFrame.loadSessions();
@@ -308,7 +309,7 @@ public class SessionFormDialog extends JDialog {
             }
             catch (Exception ex) {
             logger.error("Session save failed patientId={} sessionId={}", patientId, sessionId, ex);
-            DialogUtil.error(this, "Unable to save session");
+            DialogUtil.error(this, ErrorConstants.UNABLE_TO_SAVE_SESSION);
         }
     }
     private void registerEscapeKey() {

@@ -4,6 +4,8 @@
 package com.neuro.ui;
 
 import com.neuro.app.AppContext;
+import com.neuro.constants.ErrorConstants;
+import com.neuro.constants.MessageConstants;
 import com.neuro.repo.PatientRepository;
 import com.neuro.session.UserSession;
 import java.awt.*;
@@ -132,29 +134,29 @@ public class PatientForm extends JDialog {
     private boolean validateForm() {
 
         if (txtName.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Name required");
+            DialogUtil.warning(this,ErrorConstants.PATIENT_NAME_REQD);
             return false;
         }
 
         if (!txtMobile.getText().trim().matches("[6-9][0-9]{9}")) {
-            JOptionPane.showMessageDialog(this, "Invalid mobile number");
+            DialogUtil.warning(this, "Invalid mobile number");
             return false;
         }
 
         try {
             int age = Integer.parseInt(txtAge.getText().trim());
             if (age < 1 || age > 120) {
-                JOptionPane.showMessageDialog(this, "Invalid age");
+                DialogUtil.warning(this, ErrorConstants.INVALID_AGE);
                 return false;
             }
         } catch (NumberFormatException e) {
             logger.warn("Invalid age input: {}", txtAge.getText(), e);
-            JOptionPane.showMessageDialog(this, "Age must be number");
+            DialogUtil.warning(this, ErrorConstants.AGE_NUMBER);
             return false;
         }
 
         if (cmbGender.getSelectedIndex() == 0 || cmbMarital.getSelectedIndex() == 0) {
-            JOptionPane.showMessageDialog(this, "Select gender & marital status");
+            DialogUtil.warning(this,ErrorConstants.SELECT_GENDER_MARITAL);
             return false;
         }
 
@@ -204,7 +206,7 @@ public class PatientForm extends JDialog {
                     "",
                     ts);
 
-            JOptionPane.showMessageDialog(this, "Patient saved successfully");
+            DialogUtil.info(this, MessageConstants.SAVED);
 
             if (onSaveCallback != null) onSaveCallback.run();
 
@@ -212,7 +214,7 @@ public class PatientForm extends JDialog {
 
         } catch (Exception e) {
             logger.error("Patient save failed userId={}", UserSession.getUserId(), e);
-            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+            DialogUtil.error(this, ErrorConstants.UNABLE_TO_SAVE_PATIENT);
         }
     }
 }

@@ -15,7 +15,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import com.neuro.constants.*;
 public class DoctorDashboard extends JFrame {
 
     private JTextField txtSearchMobile;
@@ -52,6 +52,7 @@ public class DoctorDashboard extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
+        setResizable(false);
 
         // ================= TOP BAR =================
         JPanel topBar = new JPanel(new BorderLayout());
@@ -244,9 +245,7 @@ public class DoctorDashboard extends JFrame {
             updatePaginationButtons();
 
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Error loading patients:\n" + ex.getMessage());
+            DialogUtil.error(this, ErrorConstants.ERROR_LOADING_PATIENTS);
         }
     }
     private void updatePaginationButtons() {
@@ -281,7 +280,7 @@ public class DoctorDashboard extends JFrame {
 
         } catch (Exception ex) {
             logger.error("Patient search failed for mobile={}", mobile, ex);
-            JOptionPane.showMessageDialog(this, "Search error:\n" + ex.getMessage());
+            DialogUtil.error(this, ErrorConstants.SEARCH_FAILED);
         }
     }
 
@@ -292,7 +291,7 @@ public class DoctorDashboard extends JFrame {
 
         if (row == -1) {
             logger.warn("View details attempted without selecting patient");
-            JOptionPane.showMessageDialog(this, "Please select a patient.");
+            DialogUtil.warning(this,ErrorConstants.SELECT_PATIENT);
             return;
         }
 
@@ -304,15 +303,20 @@ public class DoctorDashboard extends JFrame {
 
     // ================= LOGOUT =================
     private void logout() {
-        logger.info("Logout initiated by userId={}", userId);
-        int confirm = JOptionPane.showConfirmDialog(
-                this, "Are you sure you want to logout?", "Logout", JOptionPane.YES_NO_OPTION);
 
-        if (confirm == JOptionPane.YES_OPTION) {
+        logger.info("Logout initiated by userId={}", userId);
+
+        if (DialogUtil.confirm(
+                this,
+                "Are you sure you want to logout?",
+                "Logout")) {
+
             logger.info("User {} logged out successfully", userId);
+
             UserSession.clear();
             new LoginFrame(context).setVisible(true);
             dispose();
+
         } else {
 
             logger.info("Logout cancelled by userId={}", userId);

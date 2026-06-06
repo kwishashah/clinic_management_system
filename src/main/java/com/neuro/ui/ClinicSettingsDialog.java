@@ -11,7 +11,7 @@ import javax.swing.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import java.awt.event.KeyEvent;
-
+import com.neuro.constants.*;
 public class ClinicSettingsDialog extends JDialog {
     private static final Logger logger = LogManager.getLogger(ClinicSettingsDialog.class);
     private JTextField nameField;
@@ -89,8 +89,7 @@ public class ClinicSettingsDialog extends JDialog {
             if (!(path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".jpeg"))) {
 
                 logger.warn("Invalid logo format selected={}", file.getName());
-
-                JOptionPane.showMessageDialog(this, "Invalid image. Use PNG/JPG");
+                DialogUtil.warning(this, ErrorConstants.INVALID_IMAGE);
                 return;
             }
 
@@ -111,8 +110,7 @@ public class ClinicSettingsDialog extends JDialog {
             } catch (Exception e) {
 
                 logger.error("Failed loading logo preview", e);
-
-                JOptionPane.showMessageDialog(this, "Error loading image");
+                DialogUtil.error(this, ErrorConstants.UNABLE_TO_LOAD_LOGO);
             }
 
         } else {
@@ -129,8 +127,7 @@ public class ClinicSettingsDialog extends JDialog {
 
             if (clinicName.isEmpty()) {
                 logger.warn("Save blocked: clinic name empty");
-
-                JOptionPane.showMessageDialog(this, "Clinic name required");
+                DialogUtil.warning(this,ErrorConstants.CLINIC_NAME_REQD);
                 return;
             }
 
@@ -141,23 +138,16 @@ public class ClinicSettingsDialog extends JDialog {
             ClinicConfig.save(info);
 
             logger.info("Clinic settings saved successfully");
-
-            JOptionPane.showMessageDialog(this, "Saved Successfully!");
-
+            DialogUtil.info(this, MessageConstants.SAVED);
             dispose();
-
         } catch (Exception e) {
-
             logger.error("Clinic settings save failed", e);
-
-            JOptionPane.showMessageDialog(this, "Error saving settings");
+            DialogUtil.error(this, ErrorConstants.UNABLE_TO_SAVE_SETTINGS);
         }
     }
 
     private void loadExisting() {
-
         try {
-
             logger.debug("Loading existing clinic settings");
 
             ClinicInfo info = ClinicConfig.load();
@@ -185,14 +175,12 @@ public class ClinicSettingsDialog extends JDialog {
             }
 
         } catch (Exception e) {
-
             logger.error("Failed loading clinic settings", e);
         }
     }
     private void registerEscapeKey() {
 
-        getRootPane()
-                .registerKeyboardAction(
+        getRootPane().registerKeyboardAction(
                         e -> dispose(),
                         KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
                         JComponent.WHEN_IN_FOCUSED_WINDOW);

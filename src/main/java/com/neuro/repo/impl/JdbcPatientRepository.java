@@ -4,23 +4,25 @@
 package com.neuro.repo.impl;
 
 import com.neuro.exceptions.DatabaseException;
+import com.neuro.model.Patient;
+import com.neuro.model.PatientSummary;
+import com.neuro.repo.Page;
 import com.neuro.repo.PatientRepository;
 import com.neuro.repo.queries.SqlQueries;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /** JDBC-backed {@link PatientRepository}. */
 public final class JdbcPatientRepository implements PatientRepository {
-
     private static final Logger logger = LogManager.getLogger(JdbcPatientRepository.class);
 
     private final Supplier<Connection> connectionSupplier;
@@ -30,144 +32,249 @@ public final class JdbcPatientRepository implements PatientRepository {
     }
 
     @Override
-    public void savePatient(
-            String name,
-            String mobile,
-            Integer age,
-            String gender,
-            String maritalStatus,
-            String address,
-            String occupation,
-            String bloodGroup,
-            Float height,
-            Float weight,
-            String sufferingDuration,
-            String mainDisease,
-            String complications,
-            String symptoms,
-            String painPoints,
-            String tongue,
-            String stool,
-            String urine,
-            String nails,
-            String navel,
-            String neurotherapyRequired,
-            String previousTreatment,
-            String medicines,
-            String detailedHistory,
-            String examination,
-            String bp,
-            String pulse,
-            String o2,
-            String temperature,
-            int userId,
-            String reports,
-            String media,
-            String patientStory,
-            String remarks,
-            Timestamp createdAt)
-            throws SQLException {
-
-        logger.info("Saving patient '{}' for userId={}", name, userId);
+    public void savePatient(Patient patient) throws SQLException {
+        Objects.requireNonNull(patient, "patient");
+        if (patient.getUserId() == null) {
+            throw new IllegalArgumentException("patient.userId is required");
+        }
+        logger.info("Saving patient '{}' for userId={}", patient.getName(), patient.getUserId());
         Connection con = connectionSupplier.get();
         try (PreparedStatement ps = con.prepareStatement(SqlQueries.PATIENT_INSERT)) {
-            ps.setString(1, name);
-            ps.setString(2, mobile);
-            ps.setObject(3, age);
-            ps.setString(4, gender);
-            ps.setString(5, maritalStatus);
-            ps.setString(6, address);
-            ps.setString(7, occupation);
-            ps.setString(8, bloodGroup);
-            ps.setObject(9, height);
-            ps.setObject(10, weight);
-            ps.setString(11, sufferingDuration);
-            ps.setString(12, mainDisease);
-            ps.setString(13, complications);
-            ps.setString(14, symptoms);
-            ps.setString(15, painPoints);
-            ps.setString(16, tongue);
-            ps.setString(17, stool);
-            ps.setString(18, urine);
-            ps.setString(19, nails);
-            ps.setString(20, navel);
-            ps.setString(21, neurotherapyRequired);
-            ps.setString(22, previousTreatment);
-            ps.setString(23, medicines);
-            ps.setString(24, detailedHistory);
-            ps.setString(25, examination);
-            ps.setString(26, bp);
-            ps.setString(27, pulse);
-            ps.setString(28, o2);
-            ps.setString(29, temperature);
-            ps.setInt(30, userId);
-            ps.setString(31, reports);
-            ps.setString(32, media);
-            ps.setString(33, patientStory);
-            ps.setString(34, remarks);
-            ps.setTimestamp(35, createdAt);
-
+            ps.setString(1, patient.getName());
+            ps.setString(2, patient.getMobile());
+            ps.setObject(3, patient.getAge());
+            ps.setString(4, patient.getGender());
+            ps.setString(5, patient.getMaritalStatus());
+            ps.setString(6, patient.getAddress());
+            ps.setString(7, patient.getOccupation());
+            ps.setString(8, patient.getBloodGroup());
+            ps.setObject(9, patient.getHeight());
+            ps.setObject(10, patient.getWeight());
+            ps.setString(11, patient.getSufferingDuration());
+            ps.setString(12, patient.getMainDisease());
+            ps.setString(13, patient.getComplications());
+            ps.setString(14, patient.getSymptoms());
+            ps.setString(15, patient.getPainPoints());
+            ps.setString(16, patient.getTongue());
+            ps.setString(17, patient.getStool());
+            ps.setString(18, patient.getUrine());
+            ps.setString(19, patient.getNails());
+            ps.setString(20, patient.getNavel());
+            ps.setString(21, patient.getNeurotherapyRequired());
+            ps.setString(22, patient.getPreviousTreatment());
+            ps.setString(23, patient.getMedicines());
+            ps.setString(24, patient.getDetailedHistory());
+            ps.setString(25, patient.getExamination());
+            ps.setString(26, patient.getBp());
+            ps.setString(27, patient.getPulse());
+            ps.setString(28, patient.getO2());
+            ps.setString(29, patient.getTemperature());
+            ps.setInt(30, patient.getUserId());
+            ps.setString(31, patient.getReports());
+            ps.setString(32, patient.getMedia());
+            ps.setString(33, patient.getPatientStory());
+            ps.setString(34, patient.getRemarks());
+            ps.setTimestamp(35, patient.getCreatedAt());
             int rows = ps.executeUpdate();
-            logger.info("Patient saved successfully rowsAffected={} mobile={}", rows, mobile);
+            logger.info("Patient saved successfully rowsAffected={} mobile={}", rows, patient.getMobile());
         } catch (SQLException e) {
-            logger.error("Failed saving patient for userId={}", userId, e);
+            logger.error("Failed saving patient for userId={}", patient.getUserId(), e);
             throw e;
         }
     }
 
     @Override
-    public List<Object[]> getAllPatients(int userId) throws DatabaseException {
-        List<Object[]> list = new ArrayList<>();
+    public Optional<Patient> findById(int patientId) throws DatabaseException {
+        logger.info("Fetching patient by id={}", patientId);
         Connection con = connectionSupplier.get();
-        try (PreparedStatement ps = con.prepareStatement(SqlQueries.PATIENT_SELECT_ALL_BY_USER)) {
-            logger.info("Fetching patients for userId={}", userId);
-            ps.setInt(1, userId);
+        try (PreparedStatement ps = con.prepareStatement(SqlQueries.PATIENT_SELECT_BY_ID)) {
+            ps.setInt(1, patientId);
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(new Object[] {
-                        rs.getInt("patient_id"),
-                        rs.getString("patient_name"),
-                        rs.getString("mobile_number"),
-                        rs.getInt("age"),
-                        rs.getString("gender")
-                    });
+                if (rs.next()) {
+                    return Optional.of(mapPatient(rs));
                 }
-            }
-            logger.info("Loaded {} patients for userId={}", list.size(), userId);
-            if (list.isEmpty()) {
-                logger.warn("No patients found for userId={}", userId);
+                logger.warn("No patient found for id={}", patientId);
+                return Optional.empty();
             }
         } catch (SQLException e) {
-            logger.error("Failed fetching patients for userId={}", userId, e);
-            throw new DatabaseException("Failed fetching patients for userId=" + userId, e);
+            logger.error("Failed fetching patient id={}", patientId, e);
+            throw new DatabaseException("Failed fetching patient id=" + patientId, e);
         }
-        return list;
+    }
+
+    private static Patient mapPatient(ResultSet rs) throws SQLException {
+        Patient p = new Patient();
+        p.setPatientId(rs.getInt("patient_id"));
+        p.setName(rs.getString("patient_name"));
+        p.setMobile(rs.getString("mobile_number"));
+        int age = rs.getInt("age");
+        p.setAge(rs.wasNull() ? null : age);
+        p.setGender(rs.getString("gender"));
+        p.setMaritalStatus(rs.getString("marital_status"));
+        p.setAddress(rs.getString("address"));
+        p.setOccupation(rs.getString("occupation"));
+        p.setBloodGroup(rs.getString("blood_group"));
+        float height = rs.getFloat("height");
+        p.setHeight(rs.wasNull() ? null : height);
+        float weight = rs.getFloat("weight");
+        p.setWeight(rs.wasNull() ? null : weight);
+        p.setSufferingDuration(rs.getString("suffering_duration"));
+        p.setMainDisease(rs.getString("main_disease"));
+        p.setComplications(rs.getString("complications"));
+        p.setSymptoms(rs.getString("symptoms"));
+        p.setPainPoints(rs.getString("pain_points"));
+        p.setTongue(rs.getString("tongue"));
+        p.setStool(rs.getString("stool"));
+        p.setUrine(rs.getString("urine"));
+        p.setNails(rs.getString("nails"));
+        p.setNavel(rs.getString("navel"));
+        p.setNeurotherapyRequired(rs.getString("neurotherapy_required"));
+        p.setPreviousTreatment(rs.getString("previous_treatment"));
+        p.setMedicines(rs.getString("medicines"));
+        p.setDetailedHistory(rs.getString("detailed_history"));
+        p.setExamination(rs.getString("examination"));
+        p.setBp(rs.getString("bp"));
+        p.setPulse(rs.getString("pulse"));
+        p.setO2(rs.getString("o2"));
+        p.setTemperature(rs.getString("temperature"));
+        p.setReports(rs.getString("reports"));
+        p.setMedia(rs.getString("media"));
+        p.setPatientStory(rs.getString("patient_story"));
+        p.setRemarks(rs.getString("remarks"));
+        p.setCreatedAt(rs.getTimestamp("created_at"));
+        return p;
     }
 
     @Override
-    public List<Object[]> searchPatientsByMobile(int userId, String mobile) throws DatabaseException {
-        List<Object[]> list = new ArrayList<>();
+    public Page<PatientSummary> getPatientsSummaryPage(int userId, int page, int pageSize)
+            throws DatabaseException {
+        int safePage = Math.max(0, page);
+        int safeSize = Math.max(1, pageSize);
         Connection con = connectionSupplier.get();
-        try (PreparedStatement ps = con.prepareStatement(SqlQueries.PATIENT_SEARCH_BY_MOBILE)) {
-            logger.info("Searching patients userId={} mobileLike={}", userId, mobile);
-            ps.setInt(1, userId);
-            ps.setString(2, "%" + mobile + "%");
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(new Object[] {
-                        rs.getInt("patient_id"),
-                        rs.getString("patient_name"),
-                        rs.getString("mobile_number"),
-                        rs.getInt("age"),
-                        rs.getString("gender")
-                    });
+        try {
+            int total;
+            try (PreparedStatement countPs = con.prepareStatement(SqlQueries.PATIENT_COUNT_BY_USER)) {
+                countPs.setInt(1, userId);
+                try (ResultSet rs = countPs.executeQuery()) {
+                    total = rs.next() ? rs.getInt(1) : 0;
                 }
             }
+            // Clamp the requested page so callers never see an empty result when one isn't expected.
+            int totalPages = total == 0 ? 1 : (int) Math.ceil(total / (double) safeSize);
+            int clampedPage = Math.min(safePage, totalPages - 1);
+            int offset = clampedPage * safeSize;
+            List<PatientSummary> items = new ArrayList<>();
+            try (PreparedStatement ps = con.prepareStatement(SqlQueries.PATIENT_SELECT_PAGE_BY_USER)) {
+                ps.setInt(1, userId);
+                ps.setInt(2, safeSize);
+                ps.setInt(3, offset);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        items.add(mapPatientSummary(rs));
+                    }
+                }
+            }
+            logger.info(
+                    "Loaded patient page userId={} page={} pageSize={} returned={} total={}",
+                    userId, clampedPage, safeSize, items.size(), total);
+            return new Page<>(items, total, clampedPage, safeSize);
         } catch (SQLException e) {
-            logger.error("Failed searching patients for userId={}", userId, e);
-            throw new DatabaseException("Failed searching patients for userId=" + userId, e);
+            logger.error("Failed fetching patient page for userId={}", userId, e);
+            throw new DatabaseException("Failed fetching patient page for userId=" + userId, e);
         }
-        logger.info("Search returned {} patients", list.size());
-        return list;
+    }
+
+    @Override
+    public Page<PatientSummary> searchPatientsSummaryByMobilePage(
+            int userId, String mobile, int page, int pageSize) throws DatabaseException {
+        int safePage = Math.max(0, page);
+        int safeSize = Math.max(1, pageSize);
+        String like = "%" + (mobile == null ? "" : mobile) + "%";
+        Connection con = connectionSupplier.get();
+        try {
+            int total;
+            try (PreparedStatement countPs = con.prepareStatement(SqlQueries.PATIENT_COUNT_BY_MOBILE)) {
+                countPs.setInt(1, userId);
+                countPs.setString(2, like);
+                try (ResultSet rs = countPs.executeQuery()) {
+                    total = rs.next() ? rs.getInt(1) : 0;
+                }
+            }
+            int totalPages = total == 0 ? 1 : (int) Math.ceil(total / (double) safeSize);
+            int clampedPage = Math.min(safePage, totalPages - 1);
+            int offset = clampedPage * safeSize;
+            List<PatientSummary> items = new ArrayList<>();
+            try (PreparedStatement ps = con.prepareStatement(SqlQueries.PATIENT_SEARCH_PAGE_BY_MOBILE)) {
+                ps.setInt(1, userId);
+                ps.setString(2, like);
+                ps.setInt(3, safeSize);
+                ps.setInt(4, offset);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        items.add(mapPatientSummary(rs));
+                    }
+                }
+            }
+            logger.info(
+                    "Search page userId={} mobileLike={} page={} pageSize={} returned={} total={}",
+                    userId, mobile, clampedPage, safeSize, items.size(), total);
+            return new Page<>(items, total, clampedPage, safeSize);
+        } catch (SQLException e) {
+            logger.error("Failed searching patient page for userId={}", userId, e);
+            throw new DatabaseException("Failed searching patient page for userId=" + userId, e);
+        }
+    }
+
+    @Override
+    public boolean deletePatient(int patientId, int userId) throws DatabaseException {
+        logger.info("Deleting patient id={} for userId={}", patientId, userId);
+        Connection con = connectionSupplier.get();
+        boolean originalAutoCommit = true;
+        try {
+            originalAutoCommit = con.getAutoCommit();
+            con.setAutoCommit(false);
+            // 1. Remove dependent sessions (no ON DELETE CASCADE on the FK).
+            try (PreparedStatement ps = con.prepareStatement(SqlQueries.SESSION_DELETE_BY_PATIENT)) {
+                ps.setInt(1, patientId);
+                int sessionsRemoved = ps.executeUpdate();
+                logger.debug("Removed {} session row(s) for patientId={}", sessionsRemoved, patientId);
+            }
+            // 2. Remove the patient row, scoped by user_id so callers cannot delete other doctors' data.
+            int patientRows;
+            try (PreparedStatement ps = con.prepareStatement(SqlQueries.PATIENT_DELETE)) {
+                ps.setInt(1, patientId);
+                ps.setInt(2, userId);
+                patientRows = ps.executeUpdate();
+            }
+            con.commit();
+            logger.info("Patient delete committed patientId={} userId={} rowsAffected={}",
+                    patientId, userId, patientRows);
+            return patientRows > 0;
+        } catch (SQLException e) {
+            try {
+                con.rollback();
+            } catch (SQLException rb) {
+                logger.warn("Rollback failed after delete error patientId={}", patientId, rb);
+            }
+            logger.error("Failed deleting patient id={} userId={}", patientId, userId, e);
+            throw new DatabaseException("Failed deleting patient id=" + patientId, e);
+        } finally {
+            try {
+                con.setAutoCommit(originalAutoCommit);
+            } catch (SQLException restore) {
+                logger.warn("Failed restoring auto-commit after delete patientId={}", patientId, restore);
+            }
+        }
+    }
+
+    private static PatientSummary mapPatientSummary(ResultSet rs) throws SQLException {
+        int age = rs.getInt("age");
+        Integer ageOrNull = rs.wasNull() ? null : age;
+        return new PatientSummary(
+                rs.getInt("patient_id"),
+                rs.getString("patient_name"),
+                rs.getString("mobile_number"),
+                ageOrNull,
+                rs.getString("gender"));
     }
 }

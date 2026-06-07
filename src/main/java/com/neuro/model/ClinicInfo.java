@@ -4,7 +4,6 @@
 package com.neuro.model;
 
 public class ClinicInfo {
-
     private String name;
     private String logoPath;
 

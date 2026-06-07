@@ -20,7 +20,6 @@ import com.neuro.repo.impl.JdbcUserRepository;
  */
 public record AppContext(
         UserRepository userRepo, PatientRepository patientRepo, SessionRepository sessionRepo) {
-
     /** @return a context populated with the production JDBC repositories. */
     public static AppContext defaults() {
         return new AppContext(

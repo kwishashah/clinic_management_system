@@ -6,6 +6,7 @@ package com.neuro.application;
 import com.neuro.app.AppContext;
 import com.neuro.db.DBConnection;
 import com.neuro.license.LicenseManager;
+import com.neuro.ui.AppIcon;
 import com.neuro.ui.LoginFrame;
 import com.neuro.ui.SignupFrame;
 import javax.swing.*;
@@ -25,7 +26,6 @@ import org.apache.logging.log4j.Logger;
  * </ol>
  */
 public class NeuroApplication {
-
     private static final Logger logger = LogManager.getLogger(NeuroApplication.class);
 
     /**
@@ -41,14 +41,12 @@ public class NeuroApplication {
             logger.info(LicenseManager.getMachineIdentifier());
             return;
         }
-
         // Look and feel
         try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
         } catch (Exception e) {
-            logger.warn("Failed to set system look and feel", e);
+            logger.warn("Failed to set cross-platform look-and-feel; continuing with default", e);
         }
-
         // LICENSE CHECK
         boolean valid = LicenseManager.checkLicenseOrExit();
         logger.info("License is valid: {}", valid);
@@ -57,14 +55,14 @@ public class NeuroApplication {
             logger.info("Application exited");
             System.exit(0);
         }
-
         Runtime.getRuntime().addShutdownHook(new Thread(DBConnection::close));
-
         // Wire repositories once and inject them into the UI tree.
         AppContext context = AppContext.defaults();
-
         // START UI
         SwingUtilities.invokeLater(() -> {
+            // Apply the configured clinic logo as the macOS Dock / Windows-Linux taskbar icon
+            // so the app no longer shows the default Java coffee-cup glyph when minimized.
+            AppIcon.applyToTaskbar();
             boolean hasAnyUser = context.userRepo().hasAnyUser();
             if (hasAnyUser) {
                 logger.info("User already exists, opening LoginFrame");

@@ -5,7 +5,6 @@ package com.neuro.repo;
 
 /** Domain operations against the {@code users} table. */
 public interface UserRepository {
-
     /** Validates a username / plaintext-password pair against the stored BCrypt hash. */
     boolean validateUser(String username, String password);
 

@@ -8,7 +8,6 @@ import org.mindrot.jbcrypt.BCrypt;
 
 /** Thin wrapper around {@link BCrypt} for hashing and verifying user passwords. */
 public class PasswordUtil {
-
     /**
      * Hashes a plaintext password using BCrypt with a freshly generated salt.
      *
@@ -35,15 +34,12 @@ public class PasswordUtil {
     private static String sha256(String password) throws Exception {
         MessageDigest md = MessageDigest.getInstance("SHA-256");
         byte[] hash = md.digest(password.getBytes("UTF-8"));
-
         StringBuilder hex = new StringBuilder();
-
         for (byte b : hash) {
             String s = Integer.toHexString(0xff & b);
             if (s.length() == 1) hex.append('0');
             hex.append(s);
         }
-
         return hex.toString();
     }
 }

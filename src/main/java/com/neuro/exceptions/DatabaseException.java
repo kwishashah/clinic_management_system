@@ -9,7 +9,6 @@ package com.neuro.exceptions;
  * {@link java.sql.SQLException} as the cause.
  */
 public class DatabaseException extends RuntimeException {
-
     /** @param message contextual description of the failure */
     public DatabaseException(String message) {
         super(message);

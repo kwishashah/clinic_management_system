@@ -4,6 +4,7 @@
 package com.neuro.repo.impl;
 
 import com.neuro.exceptions.DatabaseException;
+import com.neuro.model.Session;
 import com.neuro.repo.SessionRepository;
 import com.neuro.repo.queries.SqlQueries;
 import java.sql.Connection;
@@ -11,15 +12,16 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
-import java.util.Vector;
 import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /** JDBC-backed {@link SessionRepository}. */
 public final class JdbcSessionRepository implements SessionRepository {
-
     private static final Logger logger = LogManager.getLogger(JdbcSessionRepository.class);
 
     private final Supplier<Connection> connectionSupplier;
@@ -29,23 +31,23 @@ public final class JdbcSessionRepository implements SessionRepository {
     }
 
     @Override
-    public Vector<Vector<Object>> getSessionsByPatient(int patientId) {
+    public List<Session> getSessionsByPatient(int patientId) {
         logger.debug("Loading sessions for patientId={}", patientId);
-        Vector<Vector<Object>> data = new Vector<>();
+        List<Session> data = new ArrayList<>();
         Connection con = connectionSupplier.get();
         try (PreparedStatement ps = con.prepareStatement(SqlQueries.SESSION_SELECT_BY_PATIENT)) {
             ps.setInt(1, patientId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    Vector<Object> row = new Vector<>();
-                    row.add(rs.getInt("session_id"));
-                    row.add(rs.getInt("session_number"));
-                    row.add(rs.getDate("session_date"));
-                    row.add(rs.getString("treatment_given"));
-                    row.add(rs.getString("pain_before"));
-                    row.add(rs.getString("pain_after"));
-                    row.add(rs.getString("session_summary"));
-                    data.add(row);
+                    Date sqlDate = rs.getDate("session_date");
+                    data.add(new Session(
+                            rs.getInt("session_id"),
+                            rs.getInt("session_number"),
+                            sqlDate == null ? null : sqlDate.toLocalDate(),
+                            rs.getString("treatment_given"),
+                            rs.getString("pain_before"),
+                            rs.getString("pain_after"),
+                            rs.getString("session_summary")));
                 }
             }
             if (data.isEmpty()) {
@@ -80,34 +82,27 @@ public final class JdbcSessionRepository implements SessionRepository {
     }
 
     @Override
-    public void addSession(
-            int patientId,
-            int sessionNo,
-            Date date,
-            String treatment,
-            String painBefore,
-            String painAfter,
-            String summary)
-            throws DatabaseException {
+    public void addSession(int patientId, Session session) throws DatabaseException {
+        int sessionNo = session.sessionNumber();
         logger.info("Saving session patientId={} sessionNo={}", patientId, sessionNo);
-        if (treatment == null || treatment.isBlank()) {
+        if (session.treatment() == null || session.treatment().isBlank()) {
             logger.warn("Treatment blank for patientId={} sessionNo={}", patientId, sessionNo);
         }
-        if (painBefore == null || painBefore.isBlank()) {
+        if (session.painBefore() == null || session.painBefore().isBlank()) {
             logger.warn("Pain before empty patientId={} sessionNo={}", patientId, sessionNo);
         }
-        if (painAfter == null || painAfter.isBlank()) {
+        if (session.painAfter() == null || session.painAfter().isBlank()) {
             logger.warn("Pain after empty patientId={} sessionNo={}", patientId, sessionNo);
         }
         Connection con = connectionSupplier.get();
         try (PreparedStatement ps = con.prepareStatement(SqlQueries.SESSION_INSERT)) {
             ps.setInt(1, patientId);
             ps.setInt(2, sessionNo);
-            ps.setDate(3, date);
-            ps.setString(4, treatment);
-            ps.setString(5, painBefore);
-            ps.setString(6, painAfter);
-            ps.setString(7, summary);
+            ps.setDate(3, toSqlDate(session.sessionDate()));
+            ps.setString(4, session.treatment());
+            ps.setString(5, session.painBefore());
+            ps.setString(6, session.painAfter());
+            ps.setString(7, session.summary());
             int rows = ps.executeUpdate();
             logger.info("Session saved successfully rows={} patientId={}", rows, patientId);
         } catch (SQLException e) {
@@ -118,24 +113,20 @@ public final class JdbcSessionRepository implements SessionRepository {
     }
 
     @Override
-    public void updateSession(
-            int sessionId,
-            int sessionNo,
-            Date date,
-            String treatment,
-            String painBefore,
-            String painAfter,
-            String summary)
-            throws DatabaseException {
-        logger.info("Updating sessionId={}", sessionId);
+    public void updateSession(int patientId, Session session) throws DatabaseException {
+        if (session.sessionId() == Session.UNSAVED_ID) {
+            throw new IllegalArgumentException("Cannot update a session with UNSAVED_ID; use addSession instead");
+        }
+        int sessionId = session.sessionId();
+        logger.info("Updating sessionId={} patientId={}", sessionId, patientId);
         Connection con = connectionSupplier.get();
         try (PreparedStatement ps = con.prepareStatement(SqlQueries.SESSION_UPDATE)) {
-            ps.setInt(1, sessionNo);
-            ps.setDate(2, date);
-            ps.setString(3, treatment);
-            ps.setString(4, painBefore);
-            ps.setString(5, painAfter);
-            ps.setString(6, summary);
+            ps.setInt(1, session.sessionNumber());
+            ps.setDate(2, toSqlDate(session.sessionDate()));
+            ps.setString(3, session.treatment());
+            ps.setString(4, session.painBefore());
+            ps.setString(5, session.painAfter());
+            ps.setString(6, session.summary());
             ps.setInt(7, sessionId);
             int rows = ps.executeUpdate();
             logger.info("Session updated successfully rows={} sessionId={}", rows, sessionId);
@@ -143,5 +134,10 @@ public final class JdbcSessionRepository implements SessionRepository {
             logger.error("Session update failed sessionId={}", sessionId, e);
             throw new DatabaseException("Session update failed sessionId=" + sessionId, e);
         }
+    }
+
+    /** Converts a {@link LocalDate} to a {@link java.sql.Date}, preserving {@code null}. */
+    private static Date toSqlDate(LocalDate date) {
+        return date == null ? null : Date.valueOf(date);
     }
 }

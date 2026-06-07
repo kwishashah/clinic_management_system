@@ -5,13 +5,10 @@ package com.neuro.license;
 
 import java.awt.*;
 import javax.swing.*;
-
-import com.neuro.constants.ErrorConstants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.neuro.ui.DialogUtil;
-public class LicenseDialog extends JDialog {
 
+public class LicenseDialog extends JDialog {
     private static final Logger logger = LogManager.getLogger(LicenseDialog.class);
 
     private JTextField txtKey;
@@ -22,44 +19,33 @@ public class LicenseDialog extends JDialog {
         setSize(400, 220);
         setLocationRelativeTo(null);
         setModal(true);
-
         JPanel panel = new JPanel(new BorderLayout(10, 10));
-
         JLabel title = new JLabel("Enter License Key", SwingConstants.CENTER);
         title.setFont(new Font("Segoe UI", Font.BOLD, 16));
-
         txtKey = new JTextField();
-
         JButton btnActivate = new JButton("Activate");
-
         btnActivate.addActionListener(e -> handleActivate());
-
         panel.add(title, BorderLayout.NORTH);
         panel.add(txtKey, BorderLayout.CENTER);
         panel.add(btnActivate, BorderLayout.SOUTH);
-
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
         add(panel);
     }
 
     private void handleActivate() {
         try {
             String key = txtKey.getText().trim();
-
             LicenseInfo info = LicenseManager.validateLicenseKey(key);
-
             if (info != null && !info.isExpired()) {
                 LicenseManager.saveLicense(key);
                 success = true;
                 dispose();
             } else {
-                DialogUtil.warning(this, ErrorConstants.INVALID_LICENSE);
+                com.neuro.ui.UiTheme.showInfo(this, "License", "Invalid or expired license.");
             }
-
         } catch (Exception e) {
             logger.error("License validation failed", e);
-            DialogUtil.error(this, ErrorConstants.ERROR_VALIDATING_LICENSE);
+            com.neuro.ui.UiTheme.showInfo(this, "Error", "Error validating license.");
         }
     }
 

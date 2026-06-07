@@ -8,7 +8,6 @@ package com.neuro.session;
  * static state because the application is a single-user desktop client.
  */
 public class UserSession {
-
     private static int userId;
     private static String username;
 

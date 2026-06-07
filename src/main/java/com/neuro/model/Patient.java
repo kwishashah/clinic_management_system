@@ -6,7 +6,6 @@ package com.neuro.model;
 import java.sql.Timestamp;
 
 public class Patient {
-
     private Integer patientId;
     private String name;
     private String mobile;
@@ -51,7 +50,17 @@ public class Patient {
 
     private Timestamp createdAt;
 
+    private Integer userId;
+
     // ================= GETTERS & SETTERS =================
+
+    public Integer getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Integer userId) {
+        this.userId = userId;
+    }
 
     public Integer getPatientId() {
         return patientId;

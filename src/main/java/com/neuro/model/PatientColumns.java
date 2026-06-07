@@ -4,7 +4,6 @@
 package com.neuro.model;
 
 public final class PatientColumns {
-
     private PatientColumns() {}
 
     public static final int PATIENT_ID = 0;

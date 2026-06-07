@@ -18,7 +18,6 @@ import org.apache.logging.log4j.Logger;
 
 /** JDBC-backed {@link UserRepository}. */
 public final class JdbcUserRepository implements UserRepository {
-
     private static final Logger logger = LogManager.getLogger(JdbcUserRepository.class);
 
     private final Supplier<Connection> connectionSupplier;

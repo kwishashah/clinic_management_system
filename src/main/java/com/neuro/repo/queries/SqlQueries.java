@@ -39,16 +39,18 @@ public final class SqlQueries {
             + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
             + " ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-    public static final String PATIENT_SELECT_ALL_BY_USER =
-            "SELECT patient_id, patient_name, mobile_number, age, gender "
-                    + "FROM PatientHistory "
-                    + "WHERE user_id=? "
-                    + "ORDER BY patient_id DESC";
-    public static final String PATIENT_COUNT_BY_USER =
-            "SELECT COUNT(*) "
-                    + "FROM PatientHistory "
-                    + "WHERE user_id=?";
+    public static final String PATIENT_SELECT_BY_ID = "SELECT * FROM PatientHistory WHERE patient_id = ?";
 
+    // ---- Paginated patient listing ----
+    // The repository exposes only paginated listing APIs so callers cannot accidentally
+    // fetch an unbounded result set. Each "page" query is paired with a COUNT query for
+    // the total-row metadata used to render "Page X of Y" in the UI.
+
+    /** Total patient count for a user (for paging metadata). */
+    public static final String PATIENT_COUNT_BY_USER =
+            "SELECT COUNT(*) FROM PatientHistory WHERE user_id=?";
+
+    /** Single page of patients for a user (params: userId, limit, offset). */
     public static final String PATIENT_SELECT_PAGE_BY_USER =
             "SELECT patient_id, patient_name, mobile_number, age, gender "
                     + "FROM PatientHistory "
@@ -56,11 +58,25 @@ public final class SqlQueries {
                     + "ORDER BY patient_id DESC "
                     + "LIMIT ? OFFSET ?";
 
-    public static final String PATIENT_SEARCH_BY_MOBILE = "SELECT patient_id, patient_name, mobile_number, age, gender "
-            + "FROM PatientHistory "
-            + "WHERE user_id=? AND mobile_number LIKE ?";
+    /** Total matching patient count for a mobile filter (params: userId, mobileLike). */
+    public static final String PATIENT_COUNT_BY_MOBILE =
+            "SELECT COUNT(*) FROM PatientHistory WHERE user_id=? AND mobile_number LIKE ?";
 
-    public static final String PATIENT_SELECT_BY_ID = "SELECT * FROM PatientHistory WHERE patient_id = ?";
+    /** Single page of patients matching a mobile filter (params: userId, mobileLike, limit, offset). */
+    public static final String PATIENT_SEARCH_PAGE_BY_MOBILE =
+            "SELECT patient_id, patient_name, mobile_number, age, gender "
+                    + "FROM PatientHistory "
+                    + "WHERE user_id=? AND mobile_number LIKE ? "
+                    + "ORDER BY patient_id DESC "
+                    + "LIMIT ? OFFSET ?";
+
+    /** Removes all sessions for a patient (must run before deleting the patient row). */
+    public static final String SESSION_DELETE_BY_PATIENT =
+            "DELETE FROM NeurotherapySessions WHERE patient_id=?";
+
+    /** Deletes a patient row, scoped by owning user for safety (params: patientId, userId). */
+    public static final String PATIENT_DELETE =
+            "DELETE FROM PatientHistory WHERE patient_id=? AND user_id=?";
 
     // ============================================================
     //  NEUROTHERAPY SESSIONS

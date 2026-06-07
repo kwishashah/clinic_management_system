@@ -5,7 +5,6 @@ package com.neuro.exceptions;
 
 /** Checked exception raised when a license key cannot be decoded or fails validation. */
 public class LicenceException extends Exception {
-
     /** @param message human-readable description of the validation failure */
     public LicenceException(String message) {
         super(message);

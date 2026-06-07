@@ -12,7 +12,6 @@ import java.time.temporal.ChronoUnit;
  * the local clock to resist tampering.
  */
 public class LicenseInfo {
-
     private final String type;
     private final LocalDate expiry;
 

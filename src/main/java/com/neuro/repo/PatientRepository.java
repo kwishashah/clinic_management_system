@@ -4,57 +4,39 @@
 package com.neuro.repo;
 
 import com.neuro.exceptions.DatabaseException;
+import com.neuro.model.Patient;
+import com.neuro.model.PatientSummary;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.List;
+import java.util.Optional;
 
 /** Domain operations against the {@code PatientHistory} table. */
 public interface PatientRepository {
+    /** Loads the full patient record for the given id. */
+    Optional<Patient> findById(int patientId) throws DatabaseException;
 
     /** Persists a full patient intake record. */
-    void savePatient(
-            String name,
-            String mobile,
-            Integer age,
-            String gender,
-            String maritalStatus,
-            String address,
-            String occupation,
-            String bloodGroup,
-            Float height,
-            Float weight,
-            String sufferingDuration,
-            String mainDisease,
-            String complications,
-            String symptoms,
-            String painPoints,
-            String tongue,
-            String stool,
-            String urine,
-            String nails,
-            String navel,
-            String neurotherapyRequired,
-            String previousTreatment,
-            String medicines,
-            String detailedHistory,
-            String examination,
-            String bp,
-            String pulse,
-            String o2,
-            String temperature,
-            int userId,
-            String reports,
-            String media,
-            String patientStory,
-            String remarks,
-            Timestamp createdAt)
-            throws SQLException;
+    void savePatient(Patient patient) throws SQLException;
 
-    /** Returns a summary view of every patient owned by the given user. */
-    List<Object[]> getAllPatients(int userId) throws DatabaseException;
-    List<Object[]> getPatientsPage(int userId, int offset, int limit);
+    /**
+     * Returns one page of patient summaries for the given user, ordered by newest first.
+     * The returned {@link Page} also carries the total matching row count so the UI can
+     * render "Page X of Y" without issuing a separate count query.
+     *
+     * <p>This is the only listing API exposed by the repository so callers cannot
+     * accidentally fetch an unbounded result set.
+     */
+    Page<PatientSummary> getPatientsSummaryPage(int userId, int page, int pageSize) throws DatabaseException;
 
-    int getPatientCount(int userId);
-    /** Searches the user's patients by mobile-number fragment. */
-    List<Object[]> searchPatientsByMobile(int userId, String mobile) throws DatabaseException;
+    /**
+     * Returns one page of patient summaries for the given user filtered by mobile-number
+     * fragment. The returned {@link Page} carries the total matching count.
+     */
+    Page<PatientSummary> searchPatientsSummaryByMobilePage(
+            int userId, String mobile, int page, int pageSize) throws DatabaseException;
+
+    /**
+     * Deletes the given patient (and any neurotherapy sessions belonging to them) provided
+     * the patient is owned by {@code userId}. Returns {@code true} when a row was deleted.
+     */
+    boolean deletePatient(int patientId, int userId) throws DatabaseException;
 }

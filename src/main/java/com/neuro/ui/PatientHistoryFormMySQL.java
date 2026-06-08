@@ -12,6 +12,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.sql.SQLIntegrityConstraintViolationException;
 import javax.swing.*;
 import javax.swing.border.Border;
 import org.apache.logging.log4j.LogManager;
@@ -489,6 +490,13 @@ public class PatientHistoryFormMySQL extends JDialog {
             UiTheme.showInfo(this,
                     Messages.get("common.validation.title"),
                     Messages.get("patient.history.validation.numeric"));
+        } catch (SQLIntegrityConstraintViolationException e) {
+                logger.warn("Duplicate mobile number while saving patient", e);
+                UiTheme.showInfo(
+                        this,
+                        "Duplicate Mobile Number",
+                        "A patient with this mobile number already exists.");
+
         } catch (Exception e) {
             logger.error("Patient save failed userId={}", userId, e);
             UiTheme.showInfo(this, Messages.get("common.error.title"), e.getMessage());

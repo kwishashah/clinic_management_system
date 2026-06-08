@@ -27,7 +27,7 @@ public class DoctorDashboard extends JFrame {
     private DefaultTableModel tableModel;
 
     // ---- Pagination state ----
-    private static final int PAGE_SIZE = 50;
+    private static final int PAGE_SIZE = 25;
     /** Current zero-indexed page being displayed. */
     private int currentPage = 0;
     /** Total number of pages across the current dataset. */
@@ -422,8 +422,8 @@ public class DoctorDashboard extends JFrame {
         if (confirm) {
             logger.info("User {} logged out successfully", userId);
             UserSession.clear();
-            new LoginFrame(context).setVisible(true);
             dispose();
+            System.exit(0);
         } else {
             logger.info("Logout cancelled by userId={}", userId);
         }

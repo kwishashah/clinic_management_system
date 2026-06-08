@@ -429,24 +429,42 @@ public class DoctorDashboard extends JFrame {
         }
     }
 
-    /** Renders the action column cell as a "View" button. */
-    private static class ViewButtonRenderer extends JButton implements TableCellRenderer {
+    /** 3px inset around the View button so it doesn't touch the cell edges. */
+    private static final int VIEW_BUTTON_INSET = 5;
+
+    /** Wraps the given button in a panel that pads it by {@link #VIEW_BUTTON_INSET} on every edge. */
+    private static JPanel wrapWithInset(JButton button, Color background) {
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.setOpaque(true);
+        wrapper.setBackground(background);
+        wrapper.setBorder(BorderFactory.createEmptyBorder(
+                VIEW_BUTTON_INSET, VIEW_BUTTON_INSET, VIEW_BUTTON_INSET, VIEW_BUTTON_INSET));
+        wrapper.add(button, BorderLayout.CENTER);
+        return wrapper;
+    }
+
+    /** Renders the action column cell as a "View" button inset by 3px on every side. */
+    private static class ViewButtonRenderer implements TableCellRenderer {
+        private final JButton button = new JButton();
+        private final JPanel wrapper;
         ViewButtonRenderer() {
-            setOpaque(true);
-            setFocusable(false);
-            setMargin(new Insets(2, 8, 2, 8));
+            button.setFocusable(false);
+            button.setMargin(new Insets(2, 8, 2, 8));
+            wrapper = wrapWithInset(button, Color.WHITE);
         }
         @Override
         public Component getTableCellRendererComponent(
                 JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-            setText(value == null ? Messages.get("dashboard.action.view") : value.toString());
-            return this;
+            button.setText(value == null ? Messages.get("dashboard.action.view") : value.toString());
+            wrapper.setBackground(isSelected ? table.getSelectionBackground() : table.getBackground());
+            return wrapper;
         }
     }
 
     /** Editor that converts a click on the action cell into a row-specific callback. */
     private static class ViewButtonEditor extends DefaultCellEditor {
         private final JButton button;
+        private final JPanel wrapper;
         private final java.util.function.IntConsumer onClick;
         private int currentRow = -1;
         ViewButtonEditor(JTable table, java.util.function.IntConsumer onClick) {
@@ -455,6 +473,7 @@ public class DoctorDashboard extends JFrame {
             this.button = new JButton(Messages.get("dashboard.action.view"));
             button.setFocusable(false);
             button.setMargin(new Insets(2, 8, 2, 8));
+            this.wrapper = wrapWithInset(button, Color.WHITE);
             button.addActionListener(e -> {
                 fireEditingStopped();
                 if (currentRow >= 0) {
@@ -467,7 +486,8 @@ public class DoctorDashboard extends JFrame {
                 JTable table, Object value, boolean isSelected, int row, int column) {
             currentRow = row;
             button.setText(value == null ? Messages.get("dashboard.action.view") : value.toString());
-            return button;
+            wrapper.setBackground(isSelected ? table.getSelectionBackground() : table.getBackground());
+            return wrapper;
         }
         @Override
         public Object getCellEditorValue() {

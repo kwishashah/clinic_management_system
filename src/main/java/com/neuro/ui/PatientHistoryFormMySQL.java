@@ -210,6 +210,8 @@ public class PatientHistoryFormMySQL extends JDialog {
         h = addRow(historyPanel, hgbc, h, "Medicines", txtMedicines);
         h = addRow(historyPanel, hgbc, h, "Detailed History", txtDetailedHistory);
         h = addRow(historyPanel, hgbc, h, "Examination", txtExamination);
+        //Add additional report text path and create the new textfield
+        h = addRow(historyPanel, hgbc, h, "Upload Report", btnUploadReport);
         h = addRow(historyPanel, hgbc, h, "Report Analysis", txtReportAnalysis);
         h = addRow(historyPanel, hgbc, h, "Allergy", txtAllergy);
         h = addRow(historyPanel, hgbc, h, "Remarks", txtRemarks);
@@ -264,6 +266,18 @@ public class PatientHistoryFormMySQL extends JDialog {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
                 dispatchEvent(new WindowEvent(PatientHistoryFormMySQL.this, WindowEvent.WINDOW_CLOSING));
+            }
+        });
+
+        btnUploadReport.addActionListener(e -> {
+            JFileChooser chooser = new JFileChooser();
+
+            chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+                    "PDF & Images", "pdf", "jpg", "jpeg", "png"
+            ));
+
+            if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                txtReportPath.setText(chooser.getSelectedFile().getAbsolutePath());
             }
         });
     }

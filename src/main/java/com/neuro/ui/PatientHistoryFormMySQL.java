@@ -211,7 +211,11 @@ public class PatientHistoryFormMySQL extends JDialog {
         h = addRow(historyPanel, hgbc, h, "Detailed History", txtDetailedHistory);
         h = addRow(historyPanel, hgbc, h, "Examination", txtExamination);
         //Add additional report text path and create the new textfield
-        h = addRow(historyPanel, hgbc, h, "Upload Report", btnUploadReport);
+        JPanel uploadPanel = new JPanel(new BorderLayout(6, 0));
+        uploadPanel.setOpaque(false);
+        uploadPanel.add(txtReportPath, BorderLayout.CENTER);
+        uploadPanel.add(btnUploadReport, BorderLayout.EAST);
+        h = addRow(historyPanel, hgbc, h, "Upload Report", uploadPanel);
         h = addRow(historyPanel, hgbc, h, "Report Analysis", txtReportAnalysis);
         h = addRow(historyPanel, hgbc, h, "Allergy", txtAllergy);
         h = addRow(historyPanel, hgbc, h, "Remarks", txtRemarks);

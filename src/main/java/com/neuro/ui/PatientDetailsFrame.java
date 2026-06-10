@@ -21,7 +21,6 @@ import java.awt.event.KeyEvent;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.pdfbox.pdmodel.*;
@@ -39,6 +38,12 @@ public class PatientDetailsFrame extends JDialog {
 
     private JTable sessionTable;
     private DefaultTableModel sessionModel;
+    /**
+     * Cache of {@link Session} objects in the same order as {@link #sessionModel}'s rows, so the
+     * pain-data View button can hand a full Session to the read-only matrix dialog instead of
+     * re-parsing the raw string out of a table cell.
+     */
+    private final List<Session> currentSessions = new ArrayList<>();
 
     private final AppContext context;
     private final SessionRepository sessionRepo;
@@ -63,24 +68,10 @@ public class PatientDetailsFrame extends JDialog {
         gbc.insets = new Insets(0, 8, 6, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
-        // Row 0: brand header label
-        JLabel headerLabel = new JLabel(Messages.get("patient.details.title"));
-        headerLabel.setFont(UiTheme.TITLE_FONT);
-        headerLabel.setForeground(UiTheme.BRAND);
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 4;
-        content.add(headerLabel, gbc);
-        // Row 1: top brand separator
-        gbc.gridy = 1;
-        content.add(UiTheme.newBrandSeparator(), gbc);
-        // Row 2: subtitle / instructional label
-        gbc.insets = new Insets(6, 8, 6, 8);
-        JLabel subtitleLabel = new JLabel(Messages.get("patient.details.subtitle"));
-        subtitleLabel.setFont(UiTheme.SUBTITLE_FONT);
-        subtitleLabel.setForeground(UiTheme.SUBTITLE_GRAY);
-        gbc.gridy = 2;
-        content.add(subtitleLabel, gbc);
+        // Rows 0–2: standard brand title + separator + subtitle header.
+        UiTheme.addDialogHeader(content, gbc, 0,
+                Messages.get("patient.details.title"),
+                Messages.get("patient.details.subtitle"));
         // ================= TEXT AREA =================
         textArea = new JTextArea();
         textArea.setEditable(false);
@@ -90,17 +81,27 @@ public class PatientDetailsFrame extends JDialog {
         JScrollPane textScroll = new JScrollPane(textArea);
         textScroll.setBorder(UiTheme.BORDER);
         // ================= TABLE =================
+        // Pain Data (col 4) holds the raw "before->after" pain string. We render it as a
+        // single "View" button per row that opens a themed dialog, so rows stay short.
         String[] columns = {"ID", "Session No", "Date", "Treatment", "Pain Data", "Summary"};
-        sessionModel = new DefaultTableModel(columns, 0);
+        sessionModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                // Only the action column needs to be editable so the button can receive clicks.
+                return column == PAIN_COL;
+            }
+        };
         sessionTable = new JTable(sessionModel);
         sessionTable.setBackground(Color.WHITE);
-        sessionTable.setRowHeight(120);
-        // Branded header (matches DoctorDashboard)
-        JTableHeader sessionHeader = sessionTable.getTableHeader();
-        sessionHeader.setBackground(UiTheme.BRAND);
-        sessionHeader.setForeground(Color.WHITE);
-        sessionHeader.setOpaque(true); // required so the brand color paints on macOS/Aqua L&F
-        sessionHeader.setFont(sessionHeader.getFont().deriveFont(Font.BOLD));
+        sessionTable.setRowHeight(28);
+        UiTheme.brandTableHeader(sessionTable);
+        // Replace the cell with a fixed-label "View" button; the click handler reads the raw
+        // string from the model and opens a themed dialog with a Region/Before/After breakdown.
+        sessionTable.getColumnModel().getColumn(PAIN_COL).setCellRenderer(UiTheme.viewButtonRenderer("View"));
+        sessionTable.getColumnModel().getColumn(PAIN_COL).setCellEditor(
+                UiTheme.viewButtonEditor("View", this::showPainDataForRow));
+        sessionTable.getColumnModel().getColumn(PAIN_COL).setMinWidth(90);
+        sessionTable.getColumnModel().getColumn(PAIN_COL).setMaxWidth(120);
         JScrollPane tableScroll = new JScrollPane(sessionTable);
         tableScroll.setBorder(UiTheme.BORDER);
         tableScroll.getViewport().setBackground(Color.WHITE);
@@ -138,7 +139,7 @@ public class PatientDetailsFrame extends JDialog {
         gbc.gridy = 4;
         gbc.gridx = 0;
         gbc.gridwidth = 4;
-        content.add(UiTheme.newBrandSeparator(), gbc);
+        content.add(UiTheme.newDividerSeparator(), gbc);
         // Row 5: action buttons right-aligned (Back | Add Session | Open Report | Export PDF)
         JButton btnBack = new JButton("Back");
         btnBack.setMnemonic(KeyEvent.VK_B);
@@ -148,6 +149,7 @@ public class PatientDetailsFrame extends JDialog {
         btnOpenReport.setMnemonic(KeyEvent.VK_O);
         JButton btnExportPDF = new JButton("Export PDF");
         btnExportPDF.setMnemonic(KeyEvent.VK_E);
+        UiTheme.asPrimary(btnExportPDF);
         btnBack.addActionListener(e -> {
             logger.info("Returning to dashboard from patientId={}", patientId);
             dispose();
@@ -210,12 +212,15 @@ public class PatientDetailsFrame extends JDialog {
         try {
             logger.info("Loading sessions for patientId={}", patientId);
             sessionModel.setRowCount(0);
+            currentSessions.clear();
             List<Session> data = sessionRepo.getSessionsByPatient(patientId);
             logger.info("Loaded {} sessions for patientId={}", data.size(), patientId);
             for (Session s : data) {
-                String painData = formatPainData(s.painBefore());
+                currentSessions.add(s);
+                // Pain Data column holds an empty payload — the View button renders a fixed label
+                // and the click handler looks up the full Session via the row index.
                 sessionModel.addRow(new Object[] {
-                    s.sessionId(), s.sessionNumber(), s.sessionDate(), s.treatment(), painData, s.summary()
+                    s.sessionId(), s.sessionNumber(), s.sessionDate(), s.treatment(), "", s.summary()
                 });
             }
         } catch (Exception e) {
@@ -426,24 +431,165 @@ public class PatientDetailsFrame extends JDialog {
         return lines;
     }
 
-    private String formatPainData(String painData) {
-        if (painData == null || painData.isEmpty()) return "";
-        String[] labels = {
-            "Pan", "Gas", "Gast", "WD", "Gal", "Spl", "Liv", "Mu", "Rtov", "Ltov", "Dys", "Const", "Liv0", "Mul0",
-            "Follic", "Thia", "B12", "Nia"
-        };
-        StringBuilder sb = new StringBuilder();
-        String[] pairs = painData.split(",");
-        int index = 0;
-        for (String p : pairs) {
-            if (p.contains("->") && index < labels.length) {
-                sb.append(labels[index])
-                        .append(": ")
-                        .append(p.replace("->", " → "))
-                        .append("\n");
-                index++;
+    // ================= PAIN DATA DIALOG =================
+
+    /** Column index of the Pain Data action button in the session table. */
+    private static final int PAIN_COL = 4;
+
+    /** Display labels for the 18 indexed pain pairs (must match SessionFormDialog.PAIN_NAMES order). */
+    private static final String[] PAIN_LABELS = {
+        "Pan", "Gas", "GasI", "WD", "Gal", "Spl", "Liv", "Mu", "Rtov", "Ltov",
+        "Dys", "Const", "Liv0", "Mu0", "Folic", "Thia", "B12", "Nia"
+    };
+
+    /** Click handler bound to the View button in the Pain Data column. */
+    private void showPainDataForRow(int row) {
+        if (row < 0 || row >= currentSessions.size()) {
+            return;
+        }
+        showSessionPainDialog(currentSessions.get(row));
+    }
+
+    /**
+     * Opens a themed read-only modal showing the session's pain matrix in the same
+     * {@code Pain | Before | After} layout used by {@link SessionFormDialog}, but with plain
+     * labels in place of the editable combos. Data is read directly from the {@link Session}
+     * object (the persisted {@code painBefore} string carries both before and after values as
+     * {@code before->after} pairs).
+     */
+    private void showSessionPainDialog(Session session) {
+        JDialog dialog = new JDialog(this,
+                "Pain Data \u2013 Session " + session.sessionNumber(), ModalityType.APPLICATION_MODAL);
+        dialog.setResizable(false);
+        Container content = dialog.getContentPane();
+        content.setBackground(UiTheme.BG_WHITE);
+        content.setLayout(new GridBagLayout());
+        ((JComponent) content).setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(0, 8, 6, 8);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 1.0;
+        int y = UiTheme.addDialogHeader(content, gbc, 0,
+                "Pain Points",
+                "Before \u2192 After comparison for session " + session.sessionNumber());
+        // Pain matrix — same 3-column grid as SessionFormDialog, but every cell is a JLabel
+        // (the dialog is read-only).
+        JPanel painPanel = buildReadOnlyPainMatrix(session.painBefore());
+        JScrollPane painScroll = new JScrollPane(painPanel);
+        painScroll.setBorder(UiTheme.BORDER);
+        painScroll.getViewport().setBackground(UiTheme.BG_WHITE);
+        painScroll.setPreferredSize(new Dimension(360, 360));
+        gbc.gridy = y;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.BOTH;
+        content.add(painScroll, gbc);
+        gbc.weighty = 0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        // Bottom separator + Close button row, mirroring the rest of the app's dialog layout.
+        gbc.gridy = y + 1;
+        content.add(UiTheme.newDividerSeparator(), gbc);
+        JButton btnClose = new JButton("Close");
+        btnClose.setMnemonic(KeyEvent.VK_C);
+        btnClose.addActionListener(e -> dialog.dispose());
+        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        buttons.setBackground(UiTheme.BG_WHITE);
+        buttons.add(btnClose);
+        gbc.gridy = y + 2;
+        gbc.anchor = GridBagConstraints.EAST;
+        content.add(buttons, gbc);
+        dialog.getRootPane().setDefaultButton(btnClose);
+        // ESC closes the popup.
+        JRootPane root = dialog.getRootPane();
+        root.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "closePain");
+        root.getActionMap().put("closePain", new AbstractAction() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) { dialog.dispose(); }
+        });
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+
+    /**
+     * Builds the read-only pain matrix panel: a {@link GridLayout} of three columns
+     * (Pain region, Before value, After value), with a branded header row matching
+     * the editable matrix in {@link SessionFormDialog}.
+     */
+    private static JPanel buildReadOnlyPainMatrix(String rawPain) {
+        JPanel painPanel = new JPanel(new GridLayout(0, 3, 6, 6));
+        painPanel.setBackground(UiTheme.BG_WHITE);
+        painPanel.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        painPanel.add(UiTheme.brandHeaderLabel("Pain"));
+        painPanel.add(UiTheme.brandHeaderLabel("Before"));
+        painPanel.add(UiTheme.brandHeaderLabel("After"));
+        // Pre-fill 18 indexed labels + L4/R4 with empty placeholders, then overwrite from rawPain.
+        String[] before = new String[PAIN_LABELS.length];
+        String[] after = new String[PAIN_LABELS.length];
+        String[] l4 = {"", ""};
+        String[] r4 = {"", ""};
+        parsePainPairs(rawPain, before, after, l4, r4);
+        for (int i = 0; i < PAIN_LABELS.length; i++) {
+            painPanel.add(new JLabel(PAIN_LABELS[i]));
+            painPanel.add(readOnlyValueLabel(before[i]));
+            painPanel.add(readOnlyValueLabel(after[i]));
+        }
+        painPanel.add(new JLabel("Left 4th"));
+        painPanel.add(readOnlyValueLabel(l4[0]));
+        painPanel.add(readOnlyValueLabel(l4[1]));
+        painPanel.add(new JLabel("Right 4th"));
+        painPanel.add(readOnlyValueLabel(r4[0]));
+        painPanel.add(readOnlyValueLabel(r4[1]));
+        return painPanel;
+    }
+
+    /** Builds a single read-only value cell: centered, white background, brand border. */
+    private static JLabel readOnlyValueLabel(String value) {
+        JLabel label = new JLabel(value == null ? "" : value, SwingConstants.CENTER);
+        label.setOpaque(true);
+        label.setBackground(Color.WHITE);
+        label.setBorder(BorderFactory.createCompoundBorder(
+                UiTheme.BORDER, BorderFactory.createEmptyBorder(2, 6, 2, 6)));
+        return label;
+    }
+
+    /**
+     * Parses the persisted pain string into {@code before}/{@code after} arrays for the 18
+     * indexed regions plus the L4/R4 extremities. Empty / malformed entries leave the
+     * corresponding slot blank.
+     */
+    private static void parsePainPairs(String raw, String[] before, String[] after,
+            String[] l4, String[] r4) {
+        if (raw == null || raw.isEmpty()) {
+            return;
+        }
+        String[] entries = raw.split(",");
+        int idx = 0;
+        for (String entry : entries) {
+            if (entry.startsWith("L4=")) {
+                splitPair(entry.substring(3), l4);
+            } else if (entry.startsWith("R4=")) {
+                splitPair(entry.substring(3), r4);
+            } else if (idx < before.length) {
+                String[] pair = {"", ""};
+                splitPair(entry, pair);
+                before[idx] = pair[0];
+                after[idx] = pair[1];
+                idx++;
             }
         }
-        return sb.toString();
+    }
+
+    /** Splits {@code "a->b"} into {@code out[0]=a, out[1]=b}; leaves them empty if malformed. */
+    private static void splitPair(String pair, String[] out) {
+        int sep = pair.indexOf("->");
+        if (sep < 0) {
+            out[0] = pair.trim();
+            out[1] = "";
+        } else {
+            out[0] = pair.substring(0, sep).trim();
+            out[1] = pair.substring(sep + 2).trim();
+        }
     }
 }

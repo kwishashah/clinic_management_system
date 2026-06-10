@@ -23,13 +23,13 @@ public class PatientHistoryFormMySQL extends JDialog {
 
     private static final Color HEADER_COLOR = UiTheme.BRAND;
     private static final Color FORM_BG = UiTheme.BG_WHITE;
-    private static final Border FIELD_BORDER =
-            BorderFactory.createCompoundBorder(
-                    UiTheme.BORDER,
-                    BorderFactory.createEmptyBorder(2, 4, 2, 4));
-    private JTextField txtName, txtMobile, txtAge, txtOccupation;
-    private JTextField txtBloodGroup, txtHeight, txtWeight, txtDuration;
+    private JTextField txtName, txtMobile, txtOccupation;
+    private JTextField txtHeight, txtDuration;
     private JTextField txtBP, txtPulse, txtO2, txtTemp;
+    private JSpinner spnAge, spnWeight;
+    private JComboBox<String> cmbBloodGroup;
+    /** Standard ABO + Rh blood groups; blank first entry means "not selected". */
+    private static final String[] BLOOD_GROUPS = {"", "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"};
     private JTextArea txtAddress, txtMainDisease, txtComplications;
     private JTextArea txtSymptoms, txtAllergy, txtRemarks;
     private JTextArea txtPreviousTreatment, txtMedicines, txtDetailedHistory;
@@ -73,15 +73,15 @@ public class PatientHistoryFormMySQL extends JDialog {
         getContentPane().setBackground(FORM_BG);
         // ===== Fields =====
         txtName = new JTextField(20);
-        txtMobile = new JTextField(20);
-        txtAge = new JTextField(5);
+        txtMobile = new JTextField(15);
+        spnAge = createBoundedSpinner(1, 100);
         cmbGender = new JComboBox<>(new String[] {"Male", "Female", "Other"});
         cmbMarital = new JComboBox<>(new String[] {"Single", "Married"});
         txtAddress = createArea();
         txtOccupation = new JTextField(20);
-        txtBloodGroup = new JTextField();
+        cmbBloodGroup = new JComboBox<>(BLOOD_GROUPS);
         txtHeight = new JTextField(5);
-        txtWeight = new JTextField(5);
+        spnWeight = createBoundedSpinner(1, 200);
         txtDuration = new JTextField();
         txtMainDisease = createArea();
         txtComplications = createArea();
@@ -102,142 +102,50 @@ public class PatientHistoryFormMySQL extends JDialog {
         txtTemp = new JTextField(5);
         // Apply styling to every input.
         styleAllInputs();
-        // ===== Tab 1: Basic Information =====
-        JPanel basicPanel = whitePanel();
-        GridBagConstraints bgbc = newGbc();
-        int y = 0;
-        y = addSectionHeader(basicPanel, bgbc, y, "Basic Information");
-        y = addRow(basicPanel, bgbc, y, "Name", txtName);
-        y = addRow(basicPanel, bgbc, y, "Mobile", txtMobile);
-        // Gender + Marital share one inline row; each combo sizes to its content (not stretched).
-        y = addInlineRow(
-                basicPanel,
-                bgbc,
-                y,
-                new JLabel("Gender"), cmbGender,
-                new JLabel("Marital"), cmbMarital);
-        // Single combined row: Age | Weight kg | Height cm — placed directly on basicPanel
-        y = addInlineRow(
-                basicPanel,
-                bgbc,
-                y,
-                new JLabel("Age"), txtAge,
-                new JLabel("Weight"), txtWeight, new JLabel("kg"),
-                new JLabel("Height"), txtHeight, new JLabel("cm"));
-        y = addRow(basicPanel, bgbc, y, "Address", txtAddress);
-        y = addRow(basicPanel, bgbc, y, "Occupation", txtOccupation);
-        y = addRow(basicPanel, bgbc, y, "Blood Group", txtBloodGroup);
-        y = addRow(basicPanel, bgbc, y, "Duration", txtDuration);
-        addVerticalFiller(basicPanel, bgbc, y);
-        // ===== Tab 2: Patient History =====
-        JPanel historyPanel = whitePanel();
-        GridBagConstraints hgbc = newGbc();
-        int h = 0;
-        h = addSectionHeader(historyPanel, hgbc, h, "Patient History");
-        h = addRow(historyPanel, hgbc, h, "Main Disease", txtMainDisease);
-        h = addRow(historyPanel, hgbc, h, "Complications", txtComplications);
-        h = addRow(historyPanel, hgbc, h, "Symptoms", txtSymptoms);
-        // Pain points: 4-column GridBagLayout. label\u2192combo gap = 3px, pair\u2192pair gap = 12px.
-        JPanel painPanel = new JPanel(new GridBagLayout());
-        painPanel.setBackground(FORM_BG);
-        String[] names = {
-            "Pan", "Gas", "GasI", "WD", "Gal", "Spl", "Liv", "Mu", "Rtov", "Ltov", "Dys", "Const", "Liv0", "Mu0",
-            "Folic", "Thia", "B12", "Nia"
-        };
-        String[] scale = {"0", "1", "2", "3", "4"};
-        left4th = new JComboBox<>(new String[] {"No", "Yes"});
-        right4th = new JComboBox<>(new String[] {"No", "Yes"});
-        JLabel[] painLabels = new JLabel[names.length + 2];
-        JComboBox<?>[] painCombos = new JComboBox<?>[names.length + 2];
-        for (int i = 0; i < names.length; i++) {
-            painFields[i] = new JComboBox<>(scale);
-            painLabels[i] = new JLabel(names[i]);
-            painCombos[i] = painFields[i];
-        }
-        painLabels[names.length] = new JLabel("Left 4th");
-        painCombos[names.length] = left4th;
-        painLabels[names.length + 1] = new JLabel("Right 4th");
-        painCombos[names.length + 1] = right4th;
-        GridBagConstraints pg = new GridBagConstraints();
-        pg.anchor = GridBagConstraints.WEST;
-        pg.fill = GridBagConstraints.NONE;
-        for (int i = 0; i < painLabels.length; i++) {
-            int row = i / 2;
-            int pair = i % 2; // 0 => left pair (cols 0,1), 1 => right pair (cols 2,3)
-            int colLabel = pair * 2;
-            int colCombo = pair * 2 + 1;
-            pg.gridx = colLabel;
-            pg.gridy = row;
-            pg.insets = new Insets(2, 0, 2, 3); // 3px to its combo
-            painPanel.add(painLabels[i], pg);
-            pg.gridx = colCombo;
-            pg.gridy = row;
-            pg.insets = new Insets(2, 0, 2, pair == 0 ? 12 : 0); // 12px to next pair, 0 at row end
-            painPanel.add(painCombos[i], pg);
-        }
-        // Trailing filler in column 4 to absorb slack and keep cells flush-left.
-        pg.gridx = 4;
-        pg.gridy = 0;
-        pg.gridwidth = 1;
-        pg.gridheight = (painLabels.length + 1) / 2;
-        pg.weightx = 1.0;
-        pg.fill = GridBagConstraints.HORIZONTAL;
-        pg.insets = new Insets(0, 0, 0, 0);
-        painPanel.add(Box.createHorizontalGlue(), pg);
-        h = addRow(historyPanel, hgbc, h, "Pain Points", painPanel);
-        JPanel vitals = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
-        vitals.setBackground(FORM_BG);
-        // 3px left padding on each label so they sit slightly inset from the previous field.
-        Border vitalLabelPad = BorderFactory.createEmptyBorder(0, 3, 0, 0);
-        JLabel lblBP = new JLabel("BP");
-        lblBP.setBorder(vitalLabelPad);
-        JLabel lblPulse = new JLabel("Pulse");
-        lblPulse.setBorder(vitalLabelPad);
-        JLabel lblO2 = new JLabel("O2");
-        lblO2.setBorder(vitalLabelPad);
-        JLabel lblTemp = new JLabel("Temp");
-        lblTemp.setBorder(vitalLabelPad);
-        vitals.add(lblBP);
-        vitals.add(txtBP);
-        vitals.add(lblPulse);
-        vitals.add(txtPulse);
-        vitals.add(lblO2);
-        vitals.add(txtO2);
-        vitals.add(lblTemp);
-        vitals.add(txtTemp);
-        h = addRow(historyPanel, hgbc, h, "Vitals", vitals);
-        h = addRow(historyPanel, hgbc, h, "Previous Treatment", txtPreviousTreatment);
-        h = addRow(historyPanel, hgbc, h, "Medicines", txtMedicines);
-        h = addRow(historyPanel, hgbc, h, "Detailed History", txtDetailedHistory);
-        h = addRow(historyPanel, hgbc, h, "Examination", txtExamination);
-        //Add additional report text path and create the new textfield
-        JPanel uploadPanel = new JPanel(new BorderLayout(6, 0));
-        uploadPanel.setOpaque(false);
-        uploadPanel.add(txtReportPath, BorderLayout.CENTER);
-        uploadPanel.add(btnUploadReport, BorderLayout.EAST);
-        h = addRow(historyPanel, hgbc, h, "Upload Report", uploadPanel);
-        h = addRow(historyPanel, hgbc, h, "Report Analysis", txtReportAnalysis);
-        h = addRow(historyPanel, hgbc, h, "Allergy", txtAllergy);
-        h = addRow(historyPanel, hgbc, h, "Remarks", txtRemarks);
-        addVerticalFiller(historyPanel, hgbc, h);
-        // ===== Tabbed pane (left-aligned tabs) =====
-        JTabbedPane tabs = new JTabbedPane(JTabbedPane.TOP, JTabbedPane.SCROLL_TAB_LAYOUT);
-        tabs.putClientProperty("JTabbedPane.tabAreaAlignment", "leading");
-        tabs.setBackground(FORM_BG);
-        tabs.addTab("Basic Information", whiteScrollPane(basicPanel));
-        tabs.addTab("Patient History", whiteScrollPane(historyPanel));
-        add(tabs, BorderLayout.CENTER);
+        // ===== Tab content panels =====
+        JPanel basicPanel = buildBasicPanel();
+        JPanel historyPanel = buildHistoryPanel();
+        // ===== IntelliJ-style tab bar + CardLayout =====
+        CardLayout cards = new CardLayout();
+        JPanel cardPanel = new JPanel(cards);
+        cardPanel.setBackground(FORM_BG);
+        cardPanel.add(whiteScrollPane(basicPanel), "basic");
+        cardPanel.add(whiteScrollPane(historyPanel), "history");
+
+        JPanel tabBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        tabBar.setBackground(FORM_BG);
+        tabBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, UiTheme.DIVIDER));
+
+        ButtonGroup tabGroup = new ButtonGroup();
+        JToggleButton tabBasic = UiTheme.createTabButton("Basic Information");
+        tabBasic.setMnemonic(KeyEvent.VK_B);   // Alt+B switches to Basic Information
+        JToggleButton tabHistory = UiTheme.createTabButton("Patient History");
+        tabHistory.setMnemonic(KeyEvent.VK_H); // Alt+H switches to Patient History
+        // Action listeners both toggle the tab's selection and switch the visible card.
+        tabBasic.addActionListener(e -> cards.show(cardPanel, "basic"));
+        tabHistory.addActionListener(e -> cards.show(cardPanel, "history"));
+        tabGroup.add(tabBasic);
+        tabGroup.add(tabHistory);
+        tabBar.add(tabBasic);
+        tabBar.add(tabHistory);
+        tabBasic.setSelected(true);
+
+        JPanel tabsContainer = new JPanel(new BorderLayout());
+        tabsContainer.setBackground(FORM_BG);
+        tabsContainer.add(tabBar, BorderLayout.NORTH);
+        tabsContainer.add(cardPanel, BorderLayout.CENTER);
+        add(tabsContainer, BorderLayout.CENTER);
         // ===== Enter-to-next-focus =====
         enableEnterFocus(txtName);
         enableEnterFocus(txtMobile);
-        enableEnterFocus(txtAge);
+        enableEnterFocus(spnAge);
         enableEnterFocus(cmbGender);
         enableEnterFocus(cmbMarital);
         enableEnterFocus(txtAddress);
         enableEnterFocus(txtOccupation);
-        enableEnterFocus(txtBloodGroup);
+        enableEnterFocus(cmbBloodGroup);
         enableEnterFocus(txtHeight);
-        enableEnterFocus(txtWeight);
+        enableEnterFocus(spnWeight);
         enableEnterFocus(txtDuration);
         enableEnterFocus(txtMainDisease);
         enableEnterFocus(txtComplications);
@@ -253,14 +161,36 @@ public class PatientHistoryFormMySQL extends JDialog {
         enableEnterFocus(txtPulse);
         enableEnterFocus(txtO2);
         enableEnterFocus(txtTemp);
-        // ===== SAVE BUTTON =====
+        // ===== CANCEL + SAVE BUTTONS =====
+        // Cancel routes through the existing windowClosing handler so the user still gets the
+        // unsaved-changes confirmation prompt, matching the ESC shortcut behavior.
+        JButton btnCancel = new JButton("Cancel");
+        btnCancel.setMnemonic(KeyEvent.VK_C);
+        btnCancel.addActionListener(e ->
+                dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)));
         JButton btnSave = new JButton("Save");
         btnSave.setMnemonic(KeyEvent.VK_S);
+        UiTheme.asPrimary(btnSave);
         btnSave.addActionListener(e -> saveData());
-        JPanel south = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
+        // South region: a vertical stack of (a) brand separator inset from the window edges and
+        // (b) right-aligned Cancel + Save row. The horizontal padding around the separator
+        // matches the gutter used elsewhere in the app so the line doesn't run edge-to-edge.
+        JPanel south = new JPanel();
+        south.setLayout(new BoxLayout(south, BoxLayout.Y_AXIS));
         south.setBackground(FORM_BG);
-        south.setBorder(BorderFactory.createEmptyBorder(8, 12, 12, 16));
-        south.add(btnSave);
+        JPanel sepWrap = new JPanel(new BorderLayout());
+        sepWrap.setBackground(FORM_BG);
+        sepWrap.setBorder(BorderFactory.createEmptyBorder(0, 16, 0, 16));
+        sepWrap.add(UiTheme.newDividerSeparator(), BorderLayout.CENTER);
+        // Match the tighter spacing used by SessionFormDialog (FlowLayout vgap=0, 6-px top
+        // padding) so the buttons sit just under the separator instead of floating below it.
+        JPanel buttonRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        buttonRow.setBackground(FORM_BG);
+        buttonRow.setBorder(BorderFactory.createEmptyBorder(6, 12, 12, 16));
+        buttonRow.add(btnCancel);
+        buttonRow.add(btnSave);
+        south.add(sepWrap);
+        south.add(buttonRow);
         add(south, BorderLayout.SOUTH);
         // ESC routes through windowClosing so the existing close-confirmation prompt fires.
         JRootPane root = getRootPane();
@@ -322,6 +252,159 @@ public class PatientHistoryFormMySQL extends JDialog {
         return new FormPanel();
     }
 
+    /**
+     * Builds the "Basic Information" tab content: name, mobile, gender/marital,
+     * age/weight/height, address, occupation, blood group, and duration.
+     */
+    private JPanel buildBasicPanel() {
+        JPanel basicPanel = whitePanel();
+        GridBagConstraints bgbc = newGbc();
+        int y = 0;
+        y = addSectionHeader(basicPanel, bgbc, y, "Basic Information");
+        y = addRow(basicPanel, bgbc, y, "Name", txtName);
+        // Mobile is wrapped in a left-aligned flow panel so the field keeps its preferred width
+        // (~15 cols) instead of stretching across the row.
+        JPanel mobileWrap = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        mobileWrap.setOpaque(false);
+        mobileWrap.add(txtMobile);
+        y = addRow(basicPanel, bgbc, y, "Mobile", mobileWrap);
+        // Gender + Marital share one inline row; each combo sizes to its content (not stretched).
+        y = addInlineRow(
+                basicPanel,
+                bgbc,
+                y,
+                new JLabel("Gender"), cmbGender,
+                new JLabel("Marital"), cmbMarital);
+        // Single combined row: Age | Weight kg | Height cm.
+        y = addInlineRow(
+                basicPanel,
+                bgbc,
+                y,
+                new JLabel("Age"), spnAge,
+                new JLabel("Weight"), spnWeight, new JLabel("kg"),
+                new JLabel("Height"), txtHeight, new JLabel("cm"));
+        y = addRow(basicPanel, bgbc, y, "Address", txtAddress);
+        y = addRow(basicPanel, bgbc, y, "Occupation", txtOccupation);
+        // Blood Group must not stretch full-width either; wrap the combo in a flow-left panel.
+        JPanel bloodWrap = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        bloodWrap.setOpaque(false);
+        bloodWrap.add(cmbBloodGroup);
+        y = addRow(basicPanel, bgbc, y, "Blood Group", bloodWrap);
+        y = addRow(basicPanel, bgbc, y, "Duration", txtDuration);
+        addVerticalFiller(basicPanel, bgbc, y);
+        return basicPanel;
+    }
+
+    /**
+     * Builds the "Patient History" tab content: clinical history, pain points grid,
+     * vitals, report upload, and trailing narrative fields.
+     */
+    private JPanel buildHistoryPanel() {
+        JPanel historyPanel = whitePanel();
+        GridBagConstraints hgbc = newGbc();
+        int h = 0;
+        h = addSectionHeader(historyPanel, hgbc, h, "Patient History");
+        h = addRow(historyPanel, hgbc, h, "Main Disease", txtMainDisease);
+        h = addRow(historyPanel, hgbc, h, "Complications", txtComplications);
+        h = addRow(historyPanel, hgbc, h, "Symptoms", txtSymptoms);
+        h = addRow(historyPanel, hgbc, h, "Pain Points", buildPainPointsPanel());
+        h = addRow(historyPanel, hgbc, h, "Vitals", buildVitalsPanel());
+        h = addRow(historyPanel, hgbc, h, "Previous Treatment", txtPreviousTreatment);
+        h = addRow(historyPanel, hgbc, h, "Medicines", txtMedicines);
+        h = addRow(historyPanel, hgbc, h, "Detailed History", txtDetailedHistory);
+        h = addRow(historyPanel, hgbc, h, "Examination", txtExamination);
+        // Upload-report row: read-only path field on the left, "Upload Report" button on the right.
+        JPanel uploadPanel = new JPanel(new BorderLayout(6, 0));
+        uploadPanel.setOpaque(false);
+        uploadPanel.add(txtReportPath, BorderLayout.CENTER);
+        uploadPanel.add(btnUploadReport, BorderLayout.EAST);
+        h = addRow(historyPanel, hgbc, h, "Upload Report", uploadPanel);
+        h = addRow(historyPanel, hgbc, h, "Report Analysis", txtReportAnalysis);
+        h = addRow(historyPanel, hgbc, h, "Allergy", txtAllergy);
+        h = addRow(historyPanel, hgbc, h, "Remarks", txtRemarks);
+        addVerticalFiller(historyPanel, hgbc, h);
+        return historyPanel;
+    }
+
+    /**
+     * Builds the pain-points grid: 4-column GridBagLayout (label, combo, label, combo) with a
+     * 3-px label-to-combo gap and a 12-px gap between pairs. Trailing horizontal glue absorbs
+     * any leftover width so cells stay flush-left.
+     */
+    private JPanel buildPainPointsPanel() {
+        JPanel painPanel = new JPanel(new GridBagLayout());
+        painPanel.setBackground(FORM_BG);
+        String[] names = {
+            "Pan", "Gas", "GasI", "WD", "Gal", "Spl", "Liv", "Mu", "Rtov", "Ltov", "Dys", "Const", "Liv0", "Mu0",
+            "Folic", "Thia", "B12", "Nia"
+        };
+        String[] scale = {"0", "1", "2", "3", "4"};
+        left4th = new JComboBox<>(new String[] {"No", "Yes"});
+        right4th = new JComboBox<>(new String[] {"No", "Yes"});
+        JLabel[] painLabels = new JLabel[names.length + 2];
+        JComboBox<?>[] painCombos = new JComboBox<?>[names.length + 2];
+        for (int i = 0; i < names.length; i++) {
+            painFields[i] = new JComboBox<>(scale);
+            painLabels[i] = new JLabel(names[i]);
+            painCombos[i] = painFields[i];
+        }
+        painLabels[names.length] = new JLabel("Left 4th");
+        painCombos[names.length] = left4th;
+        painLabels[names.length + 1] = new JLabel("Right 4th");
+        painCombos[names.length + 1] = right4th;
+        GridBagConstraints pg = new GridBagConstraints();
+        pg.anchor = GridBagConstraints.WEST;
+        pg.fill = GridBagConstraints.NONE;
+        for (int i = 0; i < painLabels.length; i++) {
+            int row = i / 2;
+            int pair = i % 2; // 0 => left pair (cols 0,1), 1 => right pair (cols 2,3)
+            int colLabel = pair * 2;
+            int colCombo = pair * 2 + 1;
+            pg.gridx = colLabel;
+            pg.gridy = row;
+            pg.insets = new Insets(2, 0, 2, 3); // 3px to its combo
+            painPanel.add(painLabels[i], pg);
+            pg.gridx = colCombo;
+            pg.gridy = row;
+            pg.insets = new Insets(2, 0, 2, pair == 0 ? 12 : 0); // 12px to next pair, 0 at row end
+            painPanel.add(painCombos[i], pg);
+        }
+        // Trailing filler in column 4 to absorb slack and keep cells flush-left.
+        pg.gridx = 4;
+        pg.gridy = 0;
+        pg.gridwidth = 1;
+        pg.gridheight = (painLabels.length + 1) / 2;
+        pg.weightx = 1.0;
+        pg.fill = GridBagConstraints.HORIZONTAL;
+        pg.insets = new Insets(0, 0, 0, 0);
+        painPanel.add(Box.createHorizontalGlue(), pg);
+        return painPanel;
+    }
+
+    /** Builds the inline vitals row (BP, Pulse, O2, Temp) with 3-px left padding on each label. */
+    private JPanel buildVitalsPanel() {
+        JPanel vitals = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        vitals.setBackground(FORM_BG);
+        Border vitalLabelPad = BorderFactory.createEmptyBorder(0, 3, 0, 0);
+        JLabel lblBP = new JLabel("BP");
+        lblBP.setBorder(vitalLabelPad);
+        JLabel lblPulse = new JLabel("Pulse");
+        lblPulse.setBorder(vitalLabelPad);
+        JLabel lblO2 = new JLabel("O2");
+        lblO2.setBorder(vitalLabelPad);
+        JLabel lblTemp = new JLabel("Temp");
+        lblTemp.setBorder(vitalLabelPad);
+        vitals.add(lblBP);
+        vitals.add(txtBP);
+        vitals.add(lblPulse);
+        vitals.add(txtPulse);
+        vitals.add(lblO2);
+        vitals.add(txtO2);
+        vitals.add(lblTemp);
+        vitals.add(txtTemp);
+        return vitals;
+    }
+
     private static JScrollPane whiteScrollPane(JPanel panel) {
         JScrollPane sp = new JScrollPane(panel);
         sp.getViewport().setBackground(FORM_BG);
@@ -331,12 +414,11 @@ public class PatientHistoryFormMySQL extends JDialog {
 
     private void styleAllInputs() {
         JTextField[] fields = {
-            txtName, txtMobile, txtAge, txtOccupation, txtBloodGroup,
-            txtHeight, txtWeight, txtDuration, txtBP, txtPulse, txtO2, txtTemp, txtReportPath
+            txtName, txtMobile, txtOccupation,
+            txtHeight, txtDuration, txtBP, txtPulse, txtO2, txtTemp, txtReportPath
         };
         for (JTextField f : fields) {
-            f.setBorder(FIELD_BORDER);
-            f.setBackground(FORM_BG);
+            UiTheme.styleField(f);
         }
         JTextArea[] areas = {
             txtAddress, txtMainDisease, txtComplications, txtSymptoms,
@@ -420,6 +502,22 @@ public class PatientHistoryFormMySQL extends JDialog {
         panel.add(Box.createGlue(), filler);
     }
 
+    /**
+     * Creates a mouse-wheel-scrollable {@link JSpinner} bounded to {@code [min, max]} (step = 1).
+     * Initial value is {@code min}. Scrolling up increments, scrolling down decrements.
+     */
+    private JSpinner createBoundedSpinner(int min, int max) {
+        JSpinner spinner = new JSpinner(new SpinnerNumberModel(min, min, max, 1));
+        spinner.addMouseWheelListener(e -> {
+            int current = ((Number) spinner.getValue()).intValue();
+            // Wheel-up returns negative rotation; subtract so up = increase.
+            int next = current - e.getWheelRotation();
+            spinner.setValue(Math.max(min, Math.min(max, next)));
+        });
+        UiTheme.styleSpinner(spinner);
+        return spinner;
+    }
+
     private void enableEnterFocus(Component component) {
         // JTextField + JComboBox
         if (component instanceof JTextField || component instanceof JComboBox) {
@@ -428,6 +526,13 @@ public class PatientHistoryFormMySQL extends JDialog {
             }
             if (component instanceof JComboBox<?> comboBox) {
                 comboBox.addActionListener(e -> comboBox.transferFocus());
+            }
+        }
+        // JSpinner: hook the underlying editor text field so Enter moves to the next component.
+        if (component instanceof JSpinner spinner) {
+            JComponent editor = spinner.getEditor();
+            if (editor instanceof JSpinner.DefaultEditor defaultEditor) {
+                defaultEditor.getTextField().addActionListener(e -> spinner.transferFocus());
             }
         }
         // JTextArea special handling
@@ -461,7 +566,7 @@ public class PatientHistoryFormMySQL extends JDialog {
                 return;
             }
             Float height = txtHeight.getText().isEmpty() ? null : Float.parseFloat(txtHeight.getText());
-            Float weight = txtWeight.getText().isEmpty() ? null : Float.parseFloat(txtWeight.getText());
+            Float weight = ((Number) spnWeight.getValue()).floatValue();
             logger.debug("Parsed vitals height={} weight={} bp={}", height, weight, txtBP.getText());
             StringBuilder pain = new StringBuilder();
             for (JComboBox<String> field : painFields) {
@@ -473,12 +578,15 @@ public class PatientHistoryFormMySQL extends JDialog {
             Patient patient = new Patient();
             patient.setName(txtName.getText());
             patient.setMobile(txtMobile.getText());
-            patient.setAge(txtAge.getText().isEmpty() ? null : Integer.parseInt(txtAge.getText()));
+            patient.setAge(((Number) spnAge.getValue()).intValue());
             patient.setGender((String) cmbGender.getSelectedItem());
             patient.setMaritalStatus((String) cmbMarital.getSelectedItem());
             patient.setAddress(txtAddress.getText());
             patient.setOccupation(txtOccupation.getText());
-            patient.setBloodGroup(txtBloodGroup.getText());
+            // Normalize the unselected ("") option to null so the persistence layer stores absence
+            // as NULL rather than an empty string.
+            String bloodGroup = (String) cmbBloodGroup.getSelectedItem();
+            patient.setBloodGroup((bloodGroup == null || bloodGroup.isBlank()) ? null : bloodGroup);
             patient.setHeight(height);
             patient.setWeight(weight);
             patient.setSufferingDuration(txtDuration.getText());

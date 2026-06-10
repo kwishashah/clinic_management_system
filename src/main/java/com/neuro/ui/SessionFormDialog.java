@@ -94,24 +94,10 @@ public class SessionFormDialog extends JDialog {
         gbc.insets = new Insets(0, 8, 6, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
-        // Row 0: brand title
-        JLabel headerLabel = new JLabel(Messages.get(titleKey(sessionId)));
-        headerLabel.setFont(UiTheme.TITLE_FONT);
-        headerLabel.setForeground(UiTheme.BRAND);
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 4;
-        content.add(headerLabel, gbc);
-        // Row 1: top brand separator
-        gbc.gridy = 1;
-        content.add(UiTheme.newBrandSeparator(), gbc);
-        // Row 2: subtitle
-        gbc.insets = new Insets(6, 8, 6, 8);
-        JLabel subtitleLabel = new JLabel(Messages.get("session.subtitle"));
-        subtitleLabel.setFont(UiTheme.SUBTITLE_FONT);
-        subtitleLabel.setForeground(UiTheme.SUBTITLE_GRAY);
-        gbc.gridy = 2;
-        content.add(subtitleLabel, gbc);
+        // Rows 0–2: standard brand title + separator + subtitle header.
+        UiTheme.addDialogHeader(content, gbc, 0,
+                Messages.get(titleKey(sessionId)),
+                Messages.get("session.subtitle"));
         // Row 3: Session Number label (col 0) + field (col 1) + Date label (col 2) + field (col 3)
         gbc.gridy = 3;
         gbc.gridx = 0;
@@ -119,7 +105,7 @@ public class SessionFormDialog extends JDialog {
         gbc.weightx = 0;
         content.add(new JLabel("Session Number:"), gbc);
         txtSessionNumber = new JTextField();
-        txtSessionNumber.setBorder(UiTheme.BORDER);
+        UiTheme.styleField(txtSessionNumber);
         gbc.gridx = 1;
         gbc.weightx = 1.0;
         content.add(txtSessionNumber, gbc);
@@ -127,7 +113,7 @@ public class SessionFormDialog extends JDialog {
         gbc.weightx = 0;
         content.add(new JLabel("Date (yyyy-MM-dd):"), gbc);
         txtDate = new JTextField();
-        txtDate.setBorder(UiTheme.BORDER);
+        UiTheme.styleField(txtDate);
         gbc.gridx = 3;
         gbc.weightx = 1.0;
         content.add(txtDate, gbc);
@@ -140,6 +126,7 @@ public class SessionFormDialog extends JDialog {
         txtTreatment = new JTextArea(2, 20);
         txtTreatment.setLineWrap(true);
         txtTreatment.setWrapStyleWord(true);
+        UiTheme.styleField(txtTreatment);
         JScrollPane treatmentScroll = new JScrollPane(txtTreatment);
         treatmentScroll.setBorder(UiTheme.BORDER);
         treatmentScroll.setPreferredSize(new Dimension(0, 56));
@@ -151,9 +138,9 @@ public class SessionFormDialog extends JDialog {
         JPanel painPanel = new JPanel(new GridLayout(0, 3, 6, 6));
         painPanel.setBackground(UiTheme.BG_WHITE);
         // Branded header row (matches DoctorDashboard/PatientDetailsFrame table header).
-        painPanel.add(brandedHeaderCell("Pain"));
-        painPanel.add(brandedHeaderCell("Before"));
-        painPanel.add(brandedHeaderCell("After"));
+        painPanel.add(UiTheme.brandHeaderLabel("Pain"));
+        painPanel.add(UiTheme.brandHeaderLabel("Before"));
+        painPanel.add(UiTheme.brandHeaderLabel("After"));
         left4thBefore = new JComboBox<>(SCALE);
         left4thAfter = new JComboBox<>(SCALE);
         right4thBefore = new JComboBox<>(SCALE);
@@ -194,6 +181,7 @@ public class SessionFormDialog extends JDialog {
         txtSummary = new JTextArea(3, 20);
         txtSummary.setLineWrap(true);
         txtSummary.setWrapStyleWord(true);
+        UiTheme.styleField(txtSummary);
         JScrollPane summaryScroll = new JScrollPane(txtSummary);
         summaryScroll.setBorder(UiTheme.BORDER);
         summaryScroll.setPreferredSize(new Dimension(0, 56));
@@ -205,13 +193,14 @@ public class SessionFormDialog extends JDialog {
         gbc.gridy = 7;
         gbc.gridx = 0;
         gbc.gridwidth = 4;
-        content.add(UiTheme.newBrandSeparator(), gbc);
+        content.add(UiTheme.newDividerSeparator(), gbc);
         // Row 8: Cancel + Save buttons right-aligned
         JButton btnCancel = new JButton("Cancel");
         btnCancel.setMnemonic(KeyEvent.VK_C);
         btnCancel.addActionListener(e -> dispose());
         JButton btnSave = new JButton(sessionId == null ? "Add" : "Update");
         btnSave.setMnemonic(sessionId == null ? KeyEvent.VK_A : KeyEvent.VK_U);
+        UiTheme.asPrimary(btnSave);
         btnSave.addActionListener(this::handleSave);
         JPanel buttonRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         buttonRow.setBackground(UiTheme.BG_WHITE);
@@ -236,17 +225,6 @@ public class SessionFormDialog extends JDialog {
                 dispose();
             }
         });
-    }
-
-    /** Builds a single branded "table-header" style label cell (brand bg + white bold text). */
-    private static JLabel brandedHeaderCell(String text) {
-        JLabel cell = new JLabel(text, SwingConstants.CENTER);
-        cell.setOpaque(true);
-        cell.setBackground(UiTheme.BRAND);
-        cell.setForeground(Color.WHITE);
-        cell.setFont(cell.getFont().deriveFont(Font.BOLD));
-        cell.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
-        return cell;
     }
 
     private void loadSessionData() {

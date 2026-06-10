@@ -15,8 +15,6 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
-import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -103,18 +101,22 @@ public class DoctorDashboard extends JFrame {
         topBar.add(rightPanel, BorderLayout.EAST);
         add(topBar, BorderLayout.NORTH);
         // ================= MAIN =================
-        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+        // Vertical gap is 0 so the table section (table + footer) reads as one tightly-grouped block;
+        // the search row gets its own bottom inset below to preserve breathing room above the table.
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 0));
         mainPanel.setBackground(Color.WHITE);
         mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         add(mainPanel, BorderLayout.CENTER);
         // SEARCH (search controls on the left, patient actions pinned to the right)
         JPanel searchPanel = new JPanel(new BorderLayout());
         searchPanel.setBackground(Color.WHITE);
+        searchPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
         JPanel searchControls = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
         searchControls.setBackground(Color.WHITE);
-        searchControls.add(new JLabel(Messages.get("dashboard.search.label")));
+        JLabel lblSearch = new JLabel(Messages.get("dashboard.search.label"));
+        searchControls.add(lblSearch);
         txtSearchMobile = new JTextField(15);
-        txtSearchMobile.setBorder(UiTheme.BORDER);
+        UiTheme.styleField(txtSearchMobile);
         txtSearchMobile.setToolTipText(Messages.get("dashboard.search.tooltip.field"));
         searchControls.add(txtSearchMobile);
         JButton btnSearch = new JButton(Messages.get("dashboard.search.button"));
@@ -133,40 +135,8 @@ public class DoctorDashboard extends JFrame {
         searchPanel.add(searchControls, BorderLayout.WEST);
         searchPanel.add(patientActions, BorderLayout.EAST);
         mainPanel.add(searchPanel, BorderLayout.NORTH);
-        // TABLE
-        String[] columns = {
-            Messages.get("dashboard.column.id"),
-            Messages.get("dashboard.column.name"),
-            Messages.get("dashboard.column.mobile"),
-            Messages.get("dashboard.column.age"),
-            Messages.get("dashboard.column.gender"),
-            Messages.get("dashboard.column.action")
-        };
-        tableModel = new DefaultTableModel(columns, 0) {
-            @Override
-            public boolean isCellEditable(int r, int c) {
-                return c == 5; // only the action column is "editable" so the button can receive clicks
-            }
-        };
-        tblPatients = new JTable(tableModel);
-        tblPatients.setBackground(Color.WHITE);
-        tblPatients.setRowHeight(28);
-        JTableHeader tableHeader = tblPatients.getTableHeader();
-        tableHeader.setBackground(UiTheme.BRAND);
-        tableHeader.setForeground(Color.WHITE);
-        tableHeader.setOpaque(true); // required so the brand color paints on macOS/Aqua L&F
-        tableHeader.setFont(tableHeader.getFont().deriveFont(Font.BOLD));
-        TableColumn actionCol = tblPatients.getColumnModel().getColumn(5);
-        actionCol.setMinWidth(110);
-        actionCol.setMaxWidth(140);
-        actionCol.setCellRenderer(new ViewButtonRenderer());
-        actionCol.setCellEditor(new ViewButtonEditor(tblPatients, this::viewPatientDetailsForRow));
-        JScrollPane tableScroll = new JScrollPane(tblPatients);
-        tableScroll.getViewport().setBackground(Color.WHITE);
-        tableScroll.setBorder(UiTheme.BORDER);
-        mainPanel.add(tableScroll, BorderLayout.CENTER);
-        // PAGINATION BAR
-        mainPanel.add(buildPaginationBar(), BorderLayout.SOUTH);
+        // TABLE + PAGINATION as a single brand-bordered section so the pager reads as the table's footer.
+        mainPanel.add(buildTableSection(), BorderLayout.CENTER);
         // Normalize every button on the dashboard to the standard search-button height so the
         // header, search row and pagination bar share a consistent vertical rhythm.
         equalizeButtonHeights(
@@ -174,6 +144,13 @@ public class DoctorDashboard extends JFrame {
                 settingsBtn, btnLogout,
                 btnAddPatient, btnRemovePatient,
                 btnFirst, btnPrev, btnNext, btnLast);
+        // Match the search field and its label height to the search-button height so the entire
+        // search row shares a single baseline.
+        int rowHeight = btnSearch.getPreferredSize().height;
+        Dimension fieldPref = txtSearchMobile.getPreferredSize();
+        txtSearchMobile.setPreferredSize(new Dimension(fieldPref.width, rowHeight));
+        Dimension lblPref = lblSearch.getPreferredSize();
+        lblSearch.setPreferredSize(new Dimension(lblPref.width, rowHeight));
         // ================= ACTIONS =================
         btnSearch.addActionListener(e -> searchPatients());
         btnAddPatient.addActionListener(e -> openPatientForm());
@@ -188,6 +165,26 @@ public class DoctorDashboard extends JFrame {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) viewPatientDetails();
+            }
+        });
+        // ENTER on the selected row opens the patient details (overrides the default
+        // "move to next cell" behavior of JTable).
+        tblPatients.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "viewSelectedPatient");
+        tblPatients.getActionMap().put("viewSelectedPatient", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                viewPatientDetails();
+            }
+        });
+        // Window-level mnemonic: Alt+V (Option+V on macOS) triggers View for the selected row.
+        JRootPane rootPane = getRootPane();
+        rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.ALT_DOWN_MASK), "viewSelectedPatient");
+        rootPane.getActionMap().put("viewSelectedPatient", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                viewPatientDetails();
             }
         });
         loadAllPatients();
@@ -267,6 +264,102 @@ public class DoctorDashboard extends JFrame {
         };
     }
 
+    // ================= TABLE UI =================
+
+    /** Background for odd-indexed (zebra) rows; subtle enough to scan without distracting. */
+    private static final Color ZEBRA_BG = new Color(0xFAFAFA);
+
+    /**
+     * Builds the patient-list table inside its scroll pane. Adds zebra striping,
+     * right-aligned numeric columns, and the per-row "View" action button.
+     * <p>The outer brand border lives on {@link #buildTableSection()} so the table and the
+     * pagination footer share a single visual frame.
+     * <p>Side-effects: initializes {@link #tableModel} and {@link #tblPatients}.
+     */
+    private JScrollPane buildPatientsTable() {
+        String[] columns = {
+            Messages.get("dashboard.column.id"),
+            Messages.get("dashboard.column.name"),
+            Messages.get("dashboard.column.mobile"),
+            Messages.get("dashboard.column.age"),
+            Messages.get("dashboard.column.gender"),
+            Messages.get("dashboard.column.action")
+        };
+        tableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return c == 5; // only the action column is "editable" so the button can receive clicks
+            }
+        };
+        tblPatients = new JTable(tableModel) {
+            @Override
+            public Component prepareRenderer(javax.swing.table.TableCellRenderer renderer, int row, int column) {
+                Component c = super.prepareRenderer(renderer, row, column);
+                // Zebra striping for unselected, non-action cells (the action column renders its own button).
+                if (!isRowSelected(row) && column != 5) {
+                    c.setBackground(row % 2 == 0 ? Color.WHITE : ZEBRA_BG);
+                }
+                return c;
+            }
+        };
+        tblPatients.setBackground(Color.WHITE);
+        tblPatients.setRowHeight(28);
+        UiTheme.brandTableHeader(tblPatients);
+        // Left-align every data column with a 6-px left inset so text doesn't hug the grid line.
+        // NOTE: DefaultTableCellRenderer resets the border on every render to the focus / no-focus
+        // border, so we must re-apply the padding inside getTableCellRendererComponent and wrap
+        // (not replace) the L&F-provided border.
+        final javax.swing.border.Border cellPadding = BorderFactory.createEmptyBorder(0, 3, 0, 0);
+        javax.swing.table.DefaultTableCellRenderer leftAlign = new javax.swing.table.DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                    boolean isSelected, boolean hasFocus, int row, int column) {
+                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                javax.swing.border.Border base = getBorder();
+                setBorder(base == null ? cellPadding : BorderFactory.createCompoundBorder(base, cellPadding));
+                return this;
+            }
+        };
+        leftAlign.setHorizontalAlignment(SwingConstants.LEFT);
+        for (int col = 0; col < 5; col++) {
+            tblPatients.getColumnModel().getColumn(col).setCellRenderer(leftAlign);
+        }
+        TableColumn actionCol = tblPatients.getColumnModel().getColumn(5);
+        actionCol.setMinWidth(110);
+        actionCol.setMaxWidth(140);
+        // The action column is self-describing (buttons say "View"); blank its header to reduce visual noise.
+        actionCol.setHeaderValue("");
+        final String viewLabel = Messages.get("dashboard.action.view");
+        actionCol.setCellRenderer(UiTheme.viewButtonRenderer(viewLabel));
+        actionCol.setCellEditor(UiTheme.viewButtonEditor(viewLabel, this::viewPatientDetailsForRow));
+        JScrollPane tableScroll = new JScrollPane(tblPatients);
+        tableScroll.getViewport().setBackground(Color.WHITE);
+        tableScroll.setBorder(BorderFactory.createEmptyBorder()); // outer border lives on the section wrapper
+        // Show scrollbars only when the content actually overflows, so the empty state stays clean.
+        tableScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        tableScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        return tableScroll;
+    }
+
+    /**
+     * Wraps the patients table and the pagination footer in a single brand-bordered
+     * panel so the footer reads as part of the table (like a spreadsheet's sheet strip).
+     * A thin {@link UiTheme#DIVIDER} line separates the rows from the footer.
+     */
+    private JPanel buildTableSection() {
+        JPanel section = new JPanel(new BorderLayout());
+        section.setBackground(Color.WHITE);
+        section.setBorder(UiTheme.BORDER);
+        JScrollPane scroll = buildPatientsTable();
+        JPanel footer = buildPaginationBar();
+        footer.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(1, 0, 0, 0, UiTheme.DIVIDER),
+                BorderFactory.createEmptyBorder(4, 8, 4, 8)));
+        section.add(scroll, BorderLayout.CENTER);
+        section.add(footer, BorderLayout.SOUTH);
+        return section;
+    }
+
     // ================= PAGINATION UI =================
 
     /**
@@ -275,9 +368,8 @@ public class DoctorDashboard extends JFrame {
      * via {@link UiTheme}.
      */
     private JPanel buildPaginationBar() {
-        JPanel bar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 6));
+        JPanel bar = new JPanel(new BorderLayout(12, 0));
         bar.setBackground(Color.WHITE);
-        bar.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
         btnFirst = makePagerButton("\u23EE", Messages.get("dashboard.pager.first"));
         btnPrev = makePagerButton("\u25C0", Messages.get("dashboard.pager.prev"));
         btnNext = makePagerButton("\u25B6", Messages.get("dashboard.pager.next"));
@@ -288,12 +380,23 @@ public class DoctorDashboard extends JFrame {
         btnLast.addActionListener(e -> loadPage(totalPages - 1));
         lblPageInfo = new JLabel(Messages.get("dashboard.pager.empty"));
         lblPageInfo.setForeground(UiTheme.SUBTITLE_GRAY);
-        lblPageInfo.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 8));
-        bar.add(lblPageInfo);
-        bar.add(btnFirst);
-        bar.add(btnPrev);
-        bar.add(btnNext);
-        bar.add(btnLast);
+        // Status (left): "Page X of Y" followed by a dim, discoverability-focused keyboard hint.
+        JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
+        statusPanel.setBackground(Color.WHITE);
+        JLabel lblHints = new JLabel(Messages.get("dashboard.hint.keys"));
+        lblHints.setForeground(UiTheme.PLACEHOLDER_GRAY);
+        lblHints.setFont(lblHints.getFont().deriveFont(Font.PLAIN, 11f));
+        statusPanel.add(lblPageInfo);
+        statusPanel.add(lblHints);
+        // Pager buttons (right).
+        JPanel pagerButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
+        pagerButtons.setBackground(Color.WHITE);
+        pagerButtons.add(btnFirst);
+        pagerButtons.add(btnPrev);
+        pagerButtons.add(btnNext);
+        pagerButtons.add(btnLast);
+        bar.add(statusPanel, BorderLayout.WEST);
+        bar.add(pagerButtons, BorderLayout.EAST);
         return bar;
     }
 
@@ -426,72 +529,6 @@ public class DoctorDashboard extends JFrame {
             System.exit(0);
         } else {
             logger.info("Logout cancelled by userId={}", userId);
-        }
-    }
-
-    /** 3px inset around the View button so it doesn't touch the cell edges. */
-    private static final int VIEW_BUTTON_INSET = 5;
-
-    /** Wraps the given button in a panel that pads it by {@link #VIEW_BUTTON_INSET} on every edge. */
-    private static JPanel wrapWithInset(JButton button, Color background) {
-        JPanel wrapper = new JPanel(new BorderLayout());
-        wrapper.setOpaque(true);
-        wrapper.setBackground(background);
-        wrapper.setBorder(BorderFactory.createEmptyBorder(
-                VIEW_BUTTON_INSET, VIEW_BUTTON_INSET, VIEW_BUTTON_INSET, VIEW_BUTTON_INSET));
-        wrapper.add(button, BorderLayout.CENTER);
-        return wrapper;
-    }
-
-    /** Renders the action column cell as a "View" button inset by 3px on every side. */
-    private static class ViewButtonRenderer implements TableCellRenderer {
-        private final JButton button = new JButton();
-        private final JPanel wrapper;
-        ViewButtonRenderer() {
-            button.setFocusable(false);
-            button.setMargin(new Insets(2, 8, 2, 8));
-            wrapper = wrapWithInset(button, Color.WHITE);
-        }
-        @Override
-        public Component getTableCellRendererComponent(
-                JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-            button.setText(value == null ? Messages.get("dashboard.action.view") : value.toString());
-            wrapper.setBackground(isSelected ? table.getSelectionBackground() : table.getBackground());
-            return wrapper;
-        }
-    }
-
-    /** Editor that converts a click on the action cell into a row-specific callback. */
-    private static class ViewButtonEditor extends DefaultCellEditor {
-        private final JButton button;
-        private final JPanel wrapper;
-        private final java.util.function.IntConsumer onClick;
-        private int currentRow = -1;
-        ViewButtonEditor(JTable table, java.util.function.IntConsumer onClick) {
-            super(new JCheckBox());
-            this.onClick = onClick;
-            this.button = new JButton(Messages.get("dashboard.action.view"));
-            button.setFocusable(false);
-            button.setMargin(new Insets(2, 8, 2, 8));
-            this.wrapper = wrapWithInset(button, Color.WHITE);
-            button.addActionListener(e -> {
-                fireEditingStopped();
-                if (currentRow >= 0) {
-                    onClick.accept(currentRow);
-                }
-            });
-        }
-        @Override
-        public Component getTableCellEditorComponent(
-                JTable table, Object value, boolean isSelected, int row, int column) {
-            currentRow = row;
-            button.setText(value == null ? Messages.get("dashboard.action.view") : value.toString());
-            wrapper.setBackground(isSelected ? table.getSelectionBackground() : table.getBackground());
-            return wrapper;
-        }
-        @Override
-        public Object getCellEditorValue() {
-            return button.getText();
         }
     }
 

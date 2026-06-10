@@ -137,11 +137,12 @@ public class ClinicSettingsDialog extends JDialog {
         gbc.gridy = 7;
         gbc.gridx = 0;
         gbc.gridwidth = 4;
-        content.add(UiTheme.newBrandSeparator(), gbc);
+        content.add(UiTheme.newDividerSeparator(), gbc);
         // Row 8: Save button right-aligned in col 3; cols 0-2 absorb slack
         JButton saveBtn = new JButton(Messages.get("clinic.button.save"));
         saveBtn.setMnemonic(KeyEvent.VK_S); // Alt+S on Win/Linux
         saveBtn.setToolTipText(Messages.get("clinic.button.save.tooltip"));
+        UiTheme.asPrimary(saveBtn);
         gbc.gridy = 8;
         gbc.gridx = 0;
         gbc.gridwidth = 3;

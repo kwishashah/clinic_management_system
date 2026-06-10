@@ -117,12 +117,13 @@ public class SignupFrame extends JDialog {
         gbc.gridy = 7;
         gbc.gridx = 0;
         gbc.gridwidth = 4;
-        content.add(UiTheme.newBrandSeparator(), gbc);
+        content.add(UiTheme.newDividerSeparator(), gbc);
         // Row 8: buttons right-aligned in cols 2 & 3; cols 0-1 absorb slack
         JButton btnBack = new JButton(Messages.get("signup.button.back"));
         btnBack.setMnemonic(KeyEvent.VK_B);
         JButton btnCreate = new JButton(Messages.get("signup.button.create"));
         btnCreate.setMnemonic(KeyEvent.VK_C);
+        UiTheme.asPrimary(btnCreate);
         gbc.gridy = 8;
         gbc.gridx = 0;
         gbc.gridwidth = 2;

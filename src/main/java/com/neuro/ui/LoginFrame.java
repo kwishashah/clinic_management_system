@@ -105,12 +105,13 @@ public class LoginFrame extends JDialog {
         gbc.gridy = 6;
         gbc.gridx = 0;
         gbc.gridwidth = 4;
-        content.add(UiTheme.newBrandSeparator(), gbc);
+        content.add(UiTheme.newDividerSeparator(), gbc);
         // Row 7: buttons right-aligned in cols 2 & 3; cols 0-1 absorb slack
         JButton btnSignup = new JButton(Messages.get("login.button.signup"));
         btnSignup.setMnemonic(java.awt.event.KeyEvent.VK_N);
         JButton btnLogin = new JButton(Messages.get("login.button.login"));
         btnLogin.setMnemonic(java.awt.event.KeyEvent.VK_L);
+        UiTheme.asPrimary(btnLogin);
         gbc.gridy = 7;
         gbc.gridwidth = 2;
         gbc.gridx = 0;

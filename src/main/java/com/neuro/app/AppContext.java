@@ -10,7 +10,7 @@ import com.neuro.repo.UserRepository;
 import com.neuro.repo.impl.JdbcPatientRepository;
 import com.neuro.repo.impl.JdbcSessionRepository;
 import com.neuro.repo.impl.JdbcUserRepository;
-
+import com.neuro.repo.impl.HibernatePatientRepository;
 /**
  * Lightweight application-scoped container that carries the three repository instances down the
  * Swing widget tree via constructor injection.
@@ -24,7 +24,8 @@ public record AppContext(
     public static AppContext defaults() {
         return new AppContext(
                 new JdbcUserRepository(DBConnection::getConnection),
-                new JdbcPatientRepository(DBConnection::getConnection),
+               // new JdbcPatientRepository(DBConnection::getConnection),
+                new HibernatePatientRepository(),
                 new JdbcSessionRepository(DBConnection::getConnection));
     }
 }

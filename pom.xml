@@ -221,6 +221,8 @@
                                                 <include name="com.mysql.**"/>
                                                 <include name="org.slf4j.**"/>
                                                 <include name="org.apache.logging.log4j.**"/>
+                                                <include name="org.apache.pdfbox.**"/>
+                                                <include name="org.apache.fontbox.**"/>
                                             </patternset>
                                         </class>
                                         </keep>

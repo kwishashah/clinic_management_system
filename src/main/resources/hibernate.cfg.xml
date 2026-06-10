@@ -18,7 +18,7 @@
 
         <property name="hibernate.show_sql">false</property>
         <property name="hibernate.format_sql">true</property>
-
+        <mapping class="com.neuro.entity.PatientEntity"/>
     </session-factory>
 
 </hibernate-configuration>

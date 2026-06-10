@@ -56,7 +56,8 @@ public final class HibernateUtil {
         } catch (IOException e) {
             throw new ExceptionInInitializerError("Failed to load db.properties: " + e.getMessage());
         } catch (Exception e) {
-            throw new ExceptionInInitializerError("Failed to create SessionFactory: " + e.getMessage());
+            e.printStackTrace();
+            throw new ExceptionInInitializerError(e);
         }
     }
 

@@ -65,7 +65,11 @@ public final class UiTheme {
      */
     public static final Border FIELD_BORDER =
             BorderFactory.createCompoundBorder(BORDER, BorderFactory.createEmptyBorder(2, 4, 2, 4));
-
+    /** Red border used to indicate invalid input. */
+    public static final Border ERROR_BORDER =
+            BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(0xC62828)),
+                    BorderFactory.createEmptyBorder(2, 4, 2, 4));
     /** Standard danger/destructive button color (used by {@link #asDanger(JButton)}). */
     public static final Color DANGER = new Color(0xC62828);
 
@@ -243,7 +247,60 @@ public final class UiTheme {
         dialog.setVisible(true);
         return result[0];
     }
+    /**
+     * Highlights a text field as invalid.
+     */
+    public static void showFieldError(JTextComponent component) {
+        component.setBorder(ERROR_BORDER);
+    }
 
+    /**
+     * Restores the standard field styling.
+     */
+    public static void clearFieldError(JTextComponent component) {
+        component.setBorder(FIELD_BORDER);
+    }
+
+    /**
+     * Applies or removes the error border depending on whether the text
+     * contains only digits.
+     */
+    public static void validateNumericField(JTextComponent component) {
+        String text = component.getText();
+
+        if (text == null || text.isEmpty() || text.matches("\\d*")) {
+            clearFieldError(component);
+        } else {
+            showFieldError(component);
+        }
+    }
+    public static void attachNumericValidation(JTextField field) {
+        field.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+
+            private void validateField() {
+                if (field.getText().matches("\\d*")) {
+                    clearFieldError(field);
+                } else {
+                    showFieldError(field);
+                }
+            }
+
+            @Override
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                validateField();
+            }
+
+            @Override
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                validateField();
+            }
+
+            @Override
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                validateField();
+            }
+        });
+    }
     // ================= FIELD / SPINNER STYLING =================
 
     /**

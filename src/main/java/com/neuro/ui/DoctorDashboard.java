@@ -18,7 +18,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import com .neuro.ui.UiTheme;
 public class DoctorDashboard extends JFrame {
     private JTextField txtSearchMobile;
     private JTable tblPatients;
@@ -54,6 +54,7 @@ public class DoctorDashboard extends JFrame {
         setSize(1058, 750); // ~1.41 width:height ratio
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -117,6 +118,7 @@ public class DoctorDashboard extends JFrame {
         searchControls.add(lblSearch);
         txtSearchMobile = new JTextField(15);
         UiTheme.styleField(txtSearchMobile);
+        UiTheme.attachNumericValidation(txtSearchMobile);
         txtSearchMobile.setToolTipText(Messages.get("dashboard.search.tooltip.field"));
         searchControls.add(txtSearchMobile);
         JButton btnSearch = new JButton(Messages.get("dashboard.search.button"));

@@ -23,10 +23,10 @@ public class PatientHistoryFormMySQL extends JDialog {
 
     private static final Color HEADER_COLOR = UiTheme.BRAND;
     private static final Color FORM_BG = UiTheme.BG_WHITE;
-    private JTextField txtName, txtMobile, txtOccupation;
+    private JTextField txtName, txtMobile, txtOccupation,txtAge,txtWeight;
     private JTextField txtHeight, txtDuration;
     private JTextField txtBP, txtPulse, txtO2, txtTemp;
-    private JSpinner spnAge, spnWeight;
+   // private JSpinner spnAge, spnWeight;
     private JComboBox<String> cmbBloodGroup;
     /** Standard ABO + Rh blood groups; blank first entry means "not selected". */
     private static final String[] BLOOD_GROUPS = {"", "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"};
@@ -74,14 +74,15 @@ public class PatientHistoryFormMySQL extends JDialog {
         // ===== Fields =====
         txtName = new JTextField(20);
         txtMobile = new JTextField(15);
-        spnAge = createBoundedSpinner(1, 100);
+        txtAge = new JTextField(5);
         cmbGender = new JComboBox<>(new String[] {"Male", "Female", "Other"});
         cmbMarital = new JComboBox<>(new String[] {"Single", "Married"});
         txtAddress = createArea();
         txtOccupation = new JTextField(20);
         cmbBloodGroup = new JComboBox<>(BLOOD_GROUPS);
         txtHeight = new JTextField(5);
-        spnWeight = createBoundedSpinner(1, 200);
+        txtWeight = new JTextField(5);
+        //spnWeight = createBoundedSpinner(1, 200);
         txtDuration = new JTextField();
         txtMainDisease = createArea();
         txtComplications = createArea();
@@ -100,6 +101,14 @@ public class PatientHistoryFormMySQL extends JDialog {
         txtPulse = new JTextField(5);
         txtO2 = new JTextField(5);
         txtTemp = new JTextField(5);
+        UiTheme.attachNumericValidation(txtMobile);
+        UiTheme.attachNumericValidation(txtAge);
+        UiTheme.attachNumericValidation(txtHeight);
+        UiTheme.attachNumericValidation(txtWeight);
+        UiTheme.attachNumericValidation(txtO2);
+        UiTheme.attachNumericValidation(txtPulse);
+        UiTheme.attachNumericValidation(txtTemp);
+       // UiTheme.attachNumericValidation(txtBP);
         // Apply styling to every input.
         styleAllInputs();
         // ===== Tab content panels =====
@@ -138,14 +147,14 @@ public class PatientHistoryFormMySQL extends JDialog {
         // ===== Enter-to-next-focus =====
         enableEnterFocus(txtName);
         enableEnterFocus(txtMobile);
-        enableEnterFocus(spnAge);
+        enableEnterFocus(txtAge);
         enableEnterFocus(cmbGender);
         enableEnterFocus(cmbMarital);
         enableEnterFocus(txtAddress);
         enableEnterFocus(txtOccupation);
         enableEnterFocus(cmbBloodGroup);
         enableEnterFocus(txtHeight);
-        enableEnterFocus(spnWeight);
+        enableEnterFocus(txtWeight);
         enableEnterFocus(txtDuration);
         enableEnterFocus(txtMainDisease);
         enableEnterFocus(txtComplications);
@@ -280,8 +289,8 @@ public class PatientHistoryFormMySQL extends JDialog {
                 basicPanel,
                 bgbc,
                 y,
-                new JLabel("Age"), spnAge,
-                new JLabel("Weight"), spnWeight, new JLabel("kg"),
+                new JLabel("Age"), txtAge,
+                new JLabel("Weight"), txtWeight, new JLabel("kg"),
                 new JLabel("Height"), txtHeight, new JLabel("cm"));
         y = addRow(basicPanel, bgbc, y, "Address", txtAddress);
         y = addRow(basicPanel, bgbc, y, "Occupation", txtOccupation);
@@ -566,7 +575,10 @@ public class PatientHistoryFormMySQL extends JDialog {
                 return;
             }
             Float height = txtHeight.getText().isEmpty() ? null : Float.parseFloat(txtHeight.getText());
-            Float weight = ((Number) spnWeight.getValue()).floatValue();
+            //Float weight = ((Number) txtWeight.floatValue();
+            Float weight = txtWeight.getText().isEmpty()
+                    ? null
+                    : Float.parseFloat(txtWeight.getText());
             logger.debug("Parsed vitals height={} weight={} bp={}", height, weight, txtBP.getText());
             StringBuilder pain = new StringBuilder();
             for (JComboBox<String> field : painFields) {
@@ -578,7 +590,12 @@ public class PatientHistoryFormMySQL extends JDialog {
             Patient patient = new Patient();
             patient.setName(txtName.getText());
             patient.setMobile(txtMobile.getText());
-            patient.setAge(((Number) spnAge.getValue()).intValue());
+            //patient.setAge(((Number) txtAge.getValue()).intValue());
+            patient.setAge(
+                    txtAge.getText().isEmpty()
+                            ? 0
+                            : Integer.parseInt(txtAge.getText())
+            );
             patient.setGender((String) cmbGender.getSelectedItem());
             patient.setMaritalStatus((String) cmbMarital.getSelectedItem());
             patient.setAddress(txtAddress.getText());

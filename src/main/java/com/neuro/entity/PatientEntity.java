@@ -7,7 +7,6 @@ import java.sql.Timestamp;
 @Entity
 @Table(name = "PatientHistory")
 public class PatientEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "patient_id")

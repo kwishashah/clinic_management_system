@@ -102,6 +102,7 @@ public class PatientHistoryFormMySQL extends JDialog {
         txtPulse = new JTextField(5);
         txtO2 = new JTextField(5);
         txtTemp = new JTextField(5);
+        cmbBloodGroup = new JComboBox<>(BLOOD_GROUPS);
         // Apply styling to every input.
         styleAllInputs();
         // ===== Tab 1: Basic Information =====
@@ -128,6 +129,11 @@ public class PatientHistoryFormMySQL extends JDialog {
                 new JLabel("Height"), txtHeight, new JLabel("cm"));
         y = addRow(basicPanel, bgbc, y, "Address", txtAddress);
         y = addRow(basicPanel, bgbc, y, "Occupation", txtOccupation);
+        // Blood Group must not stretch full-width either; wrap the combo in a flow-left panel.
+        JPanel bloodWrap = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        bloodWrap.setOpaque(false);
+        bloodWrap.add(cmbBloodGroup);
+        y = addRow(basicPanel, bgbc, y, "Blood Group", bloodWrap);
 
         y = addRow(basicPanel, bgbc, y, "Duration", txtDuration);
         addVerticalFiller(basicPanel, bgbc, y);
@@ -231,7 +237,7 @@ public class PatientHistoryFormMySQL extends JDialog {
         enableEnterFocus(cmbMarital);
         enableEnterFocus(txtAddress);
         enableEnterFocus(txtOccupation);
-
+        enableEnterFocus(cmbBloodGroup);
         enableEnterFocus(txtHeight);
         enableEnterFocus(txtWeight);
         enableEnterFocus(txtDuration);
@@ -503,6 +509,9 @@ public class PatientHistoryFormMySQL extends JDialog {
             patient.setAddress(txtAddress.getText());
             patient.setOccupation(txtOccupation.getText());
             //patient.setBloodGroup(txtBloodGroup.getText());
+            String bloodGroup = (String) cmbBloodGroup.getSelectedItem();
+            patient.setBloodGroup((bloodGroup == null || bloodGroup.isBlank()) ? null : bloodGroup);
+
             patient.setHeight(height);
             patient.setWeight(weight);
             patient.setSufferingDuration(txtDuration.getText());

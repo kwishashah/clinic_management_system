@@ -28,7 +28,7 @@ public class PatientHistoryFormMySQL extends JDialog {
                     UiTheme.BORDER,
                     BorderFactory.createEmptyBorder(2, 4, 2, 4));
     private JTextField txtName, txtMobile, txtAge, txtOccupation;
-    private JTextField txtBloodGroup, txtHeight, txtWeight, txtDuration;
+    private JTextField  txtHeight, txtWeight, txtDuration;
     private JTextField txtBP, txtPulse, txtO2, txtTemp;
     private JTextArea txtAddress, txtMainDisease, txtComplications;
     private JTextArea txtSymptoms, txtAllergy, txtRemarks;
@@ -41,7 +41,9 @@ public class PatientHistoryFormMySQL extends JDialog {
     private JComboBox<String>[] painFields = new JComboBox[18];
     private JComboBox<String> left4th, right4th;
     private JComboBox<String> cmbGender, cmbMarital;
-
+    private JComboBox<String> cmbBloodGroup;
+    /** Standard ABO + Rh blood groups; blank first entry means "not selected". */
+    private static final String[] BLOOD_GROUPS = {"", "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"};
     private int userId;
 
     private final PatientRepository patientRepo;
@@ -79,7 +81,7 @@ public class PatientHistoryFormMySQL extends JDialog {
         cmbMarital = new JComboBox<>(new String[] {"Single", "Married"});
         txtAddress = createArea();
         txtOccupation = new JTextField(20);
-        txtBloodGroup = new JTextField();
+
         txtHeight = new JTextField(5);
         txtWeight = new JTextField(5);
         txtDuration = new JTextField();
@@ -126,7 +128,7 @@ public class PatientHistoryFormMySQL extends JDialog {
                 new JLabel("Height"), txtHeight, new JLabel("cm"));
         y = addRow(basicPanel, bgbc, y, "Address", txtAddress);
         y = addRow(basicPanel, bgbc, y, "Occupation", txtOccupation);
-        y = addRow(basicPanel, bgbc, y, "Blood Group", txtBloodGroup);
+
         y = addRow(basicPanel, bgbc, y, "Duration", txtDuration);
         addVerticalFiller(basicPanel, bgbc, y);
         // ===== Tab 2: Patient History =====
@@ -229,7 +231,7 @@ public class PatientHistoryFormMySQL extends JDialog {
         enableEnterFocus(cmbMarital);
         enableEnterFocus(txtAddress);
         enableEnterFocus(txtOccupation);
-        enableEnterFocus(txtBloodGroup);
+
         enableEnterFocus(txtHeight);
         enableEnterFocus(txtWeight);
         enableEnterFocus(txtDuration);
@@ -313,7 +315,7 @@ public class PatientHistoryFormMySQL extends JDialog {
 
     private void styleAllInputs() {
         JTextField[] fields = {
-            txtName, txtMobile, txtAge, txtOccupation, txtBloodGroup,
+            txtName, txtMobile, txtAge, txtOccupation,
             txtHeight, txtWeight, txtDuration, txtBP, txtPulse, txtO2, txtTemp, txtReportPath
         };
         for (JTextField f : fields) {
@@ -500,7 +502,7 @@ public class PatientHistoryFormMySQL extends JDialog {
             patient.setMaritalStatus((String) cmbMarital.getSelectedItem());
             patient.setAddress(txtAddress.getText());
             patient.setOccupation(txtOccupation.getText());
-            patient.setBloodGroup(txtBloodGroup.getText());
+            //patient.setBloodGroup(txtBloodGroup.getText());
             patient.setHeight(height);
             patient.setWeight(weight);
             patient.setSufferingDuration(txtDuration.getText());

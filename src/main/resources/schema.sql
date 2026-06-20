@@ -3,21 +3,22 @@
 CREATE TABLE IF NOT EXISTS users (
     user_id  INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(100) NOT NULL UNIQUE,
-    password VARCHAR(100) NOT NULL
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(20) DEFAULT 'DOCTOR'
 );
 
 CREATE TABLE IF NOT EXISTS PatientHistory (
     patient_id            INT AUTO_INCREMENT PRIMARY KEY,
-    patient_name          VARCHAR(150),
-    mobile_number         VARCHAR(20),
+    patient_name          VARCHAR(100) NOT NULL,
+    mobile_number         VARCHAR(20) NOT NULL UNIQUE,
     age                   INT,
-    gender                VARCHAR(20),
-    marital_status        VARCHAR(20),
+    gender                VARCHAR(20) DEFAULT NULL,
+    marital_status        VARCHAR(20) DEFAULT NULL,
     address               TEXT,
     occupation            VARCHAR(100),
     blood_group           VARCHAR(10),
-    height                FLOAT,
-    weight                FLOAT,
+    height                DECIMAL(5,2),
+    weight                DECIMAL(5,2),
     suffering_duration    VARCHAR(100),
     main_disease          TEXT,
     complications         TEXT,
@@ -75,8 +76,14 @@ CREATE TABLE IF NOT EXISTS NeurotherapySessions (
     session_number  INT,
     session_date    DATE,
     treatment_given TEXT,
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     pain_before     TEXT,
     pain_after      TEXT,
     session_summary TEXT,
-    CONSTRAINT fk_session_patient FOREIGN KEY (patient_id) REFERENCES PatientHistory (patient_id)
+    left4th         VARCHAR(10),
+    right4th        VARCHAR(10),
+    CONSTRAINT fk_session_patient
+        FOREIGN KEY (patient_id)
+        REFERENCES PatientHistory(patient_id)
+        ON DELETE CASCADE
 );

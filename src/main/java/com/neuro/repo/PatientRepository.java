@@ -33,6 +33,8 @@ public interface PatientRepository {
      */
     Page<PatientSummary> searchPatientsSummaryByMobilePage(
             int userId, String mobile, int page, int pageSize) throws DatabaseException;
+    boolean mobileExists(String mobile) throws DatabaseException;
+
 
     /**
      * Deletes the given patient (and any neurotherapy sessions belonging to them) provided

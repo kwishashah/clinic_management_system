@@ -3,6 +3,7 @@
  */
 package com.neuro.model;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 public class Patient {
@@ -15,8 +16,8 @@ public class Patient {
     private String address;
     private String occupation;
     private String bloodGroup;
-    private Float height;
-    private Float weight;
+    private BigDecimal height;
+    private BigDecimal weight;
 
     private String sufferingDuration;
     private String mainDisease;
@@ -134,19 +135,19 @@ public class Patient {
         this.bloodGroup = bloodGroup;
     }
 
-    public Float getHeight() {
+    public BigDecimal getHeight() {
         return height;
     }
 
-    public void setHeight(Float height) {
+    public void setHeight(BigDecimal height) {
         this.height = height;
     }
 
-    public Float getWeight() {
+    public BigDecimal getWeight() {
         return weight;
     }
 
-    public void setWeight(Float weight) {
+    public void setWeight(BigDecimal weight) {
         this.weight = weight;
     }
 

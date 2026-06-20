@@ -9,6 +9,8 @@ import com.neuro.model.PatientSummary;
 import com.neuro.repo.Page;
 import com.neuro.repo.PatientRepository;
 import com.neuro.repo.queries.SqlQueries;
+
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,6 +22,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.boot.model.internal.BinderHelper;
 
 /** JDBC-backed {@link PatientRepository}. */
 public final class JdbcPatientRepository implements PatientRepository {
@@ -114,9 +117,9 @@ public final class JdbcPatientRepository implements PatientRepository {
         p.setAddress(rs.getString("address"));
         p.setOccupation(rs.getString("occupation"));
         p.setBloodGroup(rs.getString("blood_group"));
-        float height = rs.getFloat("height");
+        BigDecimal height = rs.getBigDecimal("height");
         p.setHeight(rs.wasNull() ? null : height);
-        float weight = rs.getFloat("weight");
+        BigDecimal weight = rs.getBigDecimal("weight");
         p.setWeight(rs.wasNull() ? null : weight);
         p.setSufferingDuration(rs.getString("suffering_duration"));
         p.setMainDisease(rs.getString("main_disease"));
@@ -276,5 +279,24 @@ public final class JdbcPatientRepository implements PatientRepository {
                 rs.getString("mobile_number"),
                 ageOrNull,
                 rs.getString("gender"));
+    }
+    @Override
+    public boolean mobileExists(String mobile) throws DatabaseException {
+
+        Connection con = connectionSupplier.get();
+
+        try (PreparedStatement ps =
+                     con.prepareStatement(
+                             "SELECT 1 FROM PatientHistory WHERE mobile_number = ? LIMIT 1")) {
+
+            ps.setString(1, mobile);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+
+        } catch (SQLException e) {
+            throw new DatabaseException("Failed checking mobile number", e);
+        }
     }
 }

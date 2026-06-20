@@ -2,6 +2,7 @@ package com.neuro.entity;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 @Entity
@@ -15,7 +16,7 @@ public class PatientEntity {
     @Column(name = "patient_name", nullable = false)
     private String name;
 
-    @Column(name = "mobile_number")
+    @Column(name = "mobile_number",unique = true)
     private String mobile;
 
     @Column(name = "age")
@@ -27,7 +28,7 @@ public class PatientEntity {
     @Column(name = "marital_status")
     private String maritalStatus;
 
-    @Column(name = "address")
+    @Column(name = "address",columnDefinition = "TEXT")
     private String address;
 
     @Column(name = "occupation")
@@ -37,24 +38,24 @@ public class PatientEntity {
     private String bloodGroup;
 
     @Column(name = "height")
-    private Float height;
+    private BigDecimal height;
 
     @Column(name = "weight")
-    private Float weight;
+    private BigDecimal weight;
 
     @Column(name = "suffering_duration")
     private String sufferingDuration;
 
-    @Column(name = "main_disease")
+    @Column(name = "main_disease",columnDefinition = "TEXT")
     private String mainDisease;
 
-    @Column(name = "complications")
+    @Column(name = "complications",columnDefinition = "TEXT")
     private String complications;
 
-    @Column(name = "symptoms")
+    @Column(name = "symptoms",columnDefinition = "TEXT")
     private String symptoms;
 
-    @Column(name = "pain_points")
+    @Column(name = "pain_points",columnDefinition = "TEXT")
     private String painPoints;
 
     @Column(name = "tongue")
@@ -75,16 +76,16 @@ public class PatientEntity {
     @Column(name = "neurotherapy_required")
     private String neurotherapyRequired;
 
-    @Column(name = "previous_treatment")
+    @Column(name = "previous_treatment",columnDefinition = "TEXT")
     private String previousTreatment;
 
-    @Column(name = "medicines")
+    @Column(name = "medicines",columnDefinition = "TEXT")
     private String medicines;
 
-    @Column(name = "detailed_history")
+    @Column(name = "detailed_history",columnDefinition = "TEXT")
     private String detailedHistory;
 
-    @Column(name = "examination")
+    @Column(name = "examination",columnDefinition = "TEXT")
     private String examination;
 
     @Column(name = "bp")
@@ -99,16 +100,16 @@ public class PatientEntity {
     @Column(name = "temperature")
     private String temperature;
 
-    @Column(name = "reports")
+    @Column(name = "reports",columnDefinition = "TEXT")
     private String reports;
 
-    @Column(name = "media")
+    @Column(name = "media",columnDefinition = "TEXT")
     private String media;
 
-    @Column(name = "patient_story")
+    @Column(name = "patient_story",columnDefinition = "TEXT")
     private String patientStory;
 
-    @Column(name = "remarks")
+    @Column(name = "remarks",columnDefinition = "TEXT")
     private String remarks;
 
     @Column(name = "created_at")
@@ -191,19 +192,19 @@ public class PatientEntity {
         this.bloodGroup = bloodGroup;
     }
 
-    public Float getHeight() {
+    public BigDecimal getHeight() {
         return height;
     }
 
-    public void setHeight(Float height) {
+    public void setHeight(BigDecimal height) {
         this.height = height;
     }
 
-    public Float getWeight() {
+    public BigDecimal getWeight() {
         return weight;
     }
 
-    public void setWeight(Float weight) {
+    public void setWeight(BigDecimal weight) {
         this.weight = weight;
     }
 

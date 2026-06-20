@@ -1,4 +1,4 @@
-package com.neuro.config;
+package com.neuro.util;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -56,8 +56,9 @@ public final class HibernateUtil {
         } catch (IOException e) {
             throw new ExceptionInInitializerError("Failed to load db.properties: " + e.getMessage());
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new ExceptionInInitializerError(e);
+            throw new ExceptionInInitializerError(
+
+                    "Failed to initialize Hibernate: " + e.getMessage());
         }
     }
 

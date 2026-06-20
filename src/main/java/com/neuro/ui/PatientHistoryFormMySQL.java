@@ -17,7 +17,7 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import java.math.BigDecimal;
 public class PatientHistoryFormMySQL extends JDialog {
     private static final Logger logger = LogManager.getLogger(PatientHistoryFormMySQL.class);
 
@@ -429,6 +429,37 @@ public class PatientHistoryFormMySQL extends JDialog {
 
     // ================= SAVE =================
     private void saveData() {
+        String name = txtName.getText().trim();
+        String mobile = txtMobile.getText().trim();
+
+        if (name.isEmpty()) {
+            UiTheme.showInfo(this, "Validation", "Patient name is required.");
+            return;
+        }
+
+        if (mobile.isEmpty()) {
+            UiTheme.showInfo(this, "Validation", "Mobile number is required.");
+            return;
+        }
+        if (patientRepo.mobileExists(mobile)) {
+
+            txtMobile.setBackground(new Color(255, 220, 220)); // light red
+
+            UiTheme.showInfo(
+
+                    this,
+
+                    "Duplicate Mobile Number",
+
+                    "A patient with this mobile number already exists."
+
+            );
+
+            txtMobile.requestFocus();
+
+            return;
+
+        }
         try {
             logger.info(
                     "Saving patient started name={} mobile={} userId={}",
@@ -442,8 +473,17 @@ public class PatientHistoryFormMySQL extends JDialog {
                         Messages.get("patient.history.validation.name"));
                 return;
             }
-            Float height = txtHeight.getText().isEmpty() ? null : Float.parseFloat(txtHeight.getText());
-            Float weight = txtWeight.getText().isEmpty() ? null : Float.parseFloat(txtWeight.getText());
+            //Float height = txtHeight.getText().isEmpty() ? null : Float.parseFloat(txtHeight.getText());
+           // Float weight = txtWeight.getText().isEmpty() ? null : Float.parseFloat(txtWeight.getText());
+            BigDecimal height =
+                    txtHeight.getText().isEmpty()
+                            ? null
+                            : new BigDecimal(txtHeight.getText());
+
+            BigDecimal weight =
+                    txtWeight.getText().isEmpty()
+                            ? null
+                            : new BigDecimal(txtWeight.getText());
             logger.debug("Parsed vitals height={} weight={} bp={}", height, weight, txtBP.getText());
             StringBuilder pain = new StringBuilder();
             for (JComboBox<String> field : painFields) {

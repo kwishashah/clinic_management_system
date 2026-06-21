@@ -31,7 +31,7 @@ public class PatientHistoryFormMySQL extends JDialog {
     private JTextField  txtHeight, txtWeight, txtDuration;
     private JTextField txtBP, txtPulse, txtO2, txtTemp;
     private JTextArea txtAddress, txtMainDisease, txtComplications;
-    private JTextArea txtSymptoms, txtAllergy, txtRemarks;
+    private JTextArea txtSymptoms, txtRemarks;
     private JTextArea txtPreviousTreatment, txtMedicines, txtDetailedHistory;
     private JTextArea txtExamination, txtReportAnalysis;
 
@@ -76,6 +76,12 @@ public class PatientHistoryFormMySQL extends JDialog {
         // ===== Fields =====
         txtName = new JTextField(20);
         txtMobile = new JTextField(20);
+        txtMobile.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                txtMobile.setBackground(FORM_BG);
+            }
+        });
         txtAge = new JTextField(5);
         cmbGender = new JComboBox<>(new String[] {"Male", "Female", "Other"});
         cmbMarital = new JComboBox<>(new String[] {"Single", "Married"});
@@ -93,7 +99,7 @@ public class PatientHistoryFormMySQL extends JDialog {
         txtDetailedHistory = createArea();
         txtExamination = createArea();
         txtReportAnalysis = createArea();
-        txtAllergy = createArea();
+        //txtAllergy = createArea();
         txtRemarks = createArea();
         txtReportPath = new JTextField(20);
         txtReportPath.setEditable(false);
@@ -213,13 +219,19 @@ public class PatientHistoryFormMySQL extends JDialog {
         vitals.add(txtO2);
         vitals.add(lblTemp);
         vitals.add(txtTemp);
+        JPanel uploadPanel = new JPanel(new BorderLayout(6, 0));
+        uploadPanel.setOpaque(false);
+        uploadPanel.add(txtReportPath, BorderLayout.CENTER);
+        uploadPanel.add(btnUploadReport, BorderLayout.EAST);
+        h = addRow(historyPanel, hgbc, h, "Upload Report", uploadPanel);
+        h = addRow(historyPanel, hgbc, h, "Report Analysis", txtReportAnalysis);
         h = addRow(historyPanel, hgbc, h, "Vitals", vitals);
         h = addRow(historyPanel, hgbc, h, "Previous Treatment", txtPreviousTreatment);
         h = addRow(historyPanel, hgbc, h, "Medicines", txtMedicines);
         h = addRow(historyPanel, hgbc, h, "Detailed History", txtDetailedHistory);
         h = addRow(historyPanel, hgbc, h, "Examination", txtExamination);
-        h = addRow(historyPanel, hgbc, h, "Report Analysis", txtReportAnalysis);
-        h = addRow(historyPanel, hgbc, h, "Allergy", txtAllergy);
+
+       // h = addRow(historyPanel, hgbc, h, "Allergy", txtAllergy);
         h = addRow(historyPanel, hgbc, h, "Remarks", txtRemarks);
         addVerticalFiller(historyPanel, hgbc, h);
         // ===== Tabbed pane (left-aligned tabs) =====
@@ -249,12 +261,23 @@ public class PatientHistoryFormMySQL extends JDialog {
         enableEnterFocus(txtDetailedHistory);
         enableEnterFocus(txtExamination);
         enableEnterFocus(txtReportAnalysis);
-        enableEnterFocus(txtAllergy);
+        //enableEnterFocus(txtAllergy);
         enableEnterFocus(txtRemarks);
         enableEnterFocus(txtBP);
         enableEnterFocus(txtPulse);
         enableEnterFocus(txtO2);
         enableEnterFocus(txtTemp);
+        btnUploadReport.addActionListener(e -> {
+            JFileChooser chooser = new JFileChooser();
+
+            chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+                    "PDF & Images", "pdf", "jpg", "jpeg", "png"
+            ));
+
+            if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                txtReportPath.setText(chooser.getSelectedFile().getAbsolutePath());
+            }
+        });
         // ===== SAVE BUTTON =====
         JButton btnSave = new JButton("Save");
         btnSave.setMnemonic(KeyEvent.VK_S);
@@ -290,7 +313,6 @@ public class PatientHistoryFormMySQL extends JDialog {
         public Dimension getPreferredScrollableViewportSize() {
             return getPreferredSize();
         }
-        @Override
         public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
             return 16;
         }
@@ -331,7 +353,7 @@ public class PatientHistoryFormMySQL extends JDialog {
         JTextArea[] areas = {
             txtAddress, txtMainDisease, txtComplications, txtSymptoms,
             txtPreviousTreatment, txtMedicines, txtDetailedHistory,
-            txtExamination, txtReportAnalysis, txtAllergy, txtRemarks
+            txtExamination, txtReportAnalysis,  txtRemarks
         };
         for (JTextArea a : areas) {
             a.setBackground(FORM_BG);
@@ -463,7 +485,8 @@ public class PatientHistoryFormMySQL extends JDialog {
 
             );
 
-            txtMobile.requestFocus();
+            txtMobile.requestFocusInWindow();
+            txtMobile.selectAll();
 
             return;
 
@@ -501,8 +524,8 @@ public class PatientHistoryFormMySQL extends JDialog {
             pain.append("R4=").append(right4th.getSelectedItem());
             logger.debug("Pain points captured={}", pain);
             Patient patient = new Patient();
-            patient.setName(txtName.getText());
-            patient.setMobile(txtMobile.getText());
+            patient.setName(txtName.getText().trim());
+            patient.setMobile(txtMobile.getText().trim());
             patient.setAge(txtAge.getText().isEmpty() ? null : Integer.parseInt(txtAge.getText()));
             patient.setGender((String) cmbGender.getSelectedItem());
             patient.setMaritalStatus((String) cmbMarital.getSelectedItem());
@@ -530,6 +553,7 @@ public class PatientHistoryFormMySQL extends JDialog {
             patient.setUserId(userId);
             patient.setReports(txtReportPath.getText());
             patient.setPatientStory(txtReportAnalysis.getText());
+           // patient.setAllergy(txtAllergy.getText());
             patient.setRemarks(txtRemarks.getText());
             patient.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
             patientRepo.savePatient(patient);

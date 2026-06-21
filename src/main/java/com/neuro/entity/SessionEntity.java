@@ -13,8 +13,7 @@ public class SessionEntity {
     @Column(name = "session_id")
     private Integer sessionId;
 
-    @Column(name = "patient_id")
-    private Integer patientId;
+
 
     @Column(name = "session_number")
     private Integer sessionNumber;
@@ -33,6 +32,11 @@ public class SessionEntity {
 
     @Column(name = "session_summary")
     private String summary;
+    @ManyToOne(fetch = FetchType.LAZY)
+
+    @JoinColumn(name = "patient_id", nullable = false)
+
+    private PatientEntity patient;
 
     public Integer getSessionId() {
         return sessionId;
@@ -42,12 +46,12 @@ public class SessionEntity {
         this.sessionId = sessionId;
     }
 
-    public Integer getPatientId() {
-        return patientId;
+    public PatientEntity getPatient() {
+        return patient;
     }
 
-    public void setPatientId(Integer patientId) {
-        this.patientId = patientId;
+    public void setPatient(PatientEntity patient) {
+        this.patient = patient;
     }
 
     public Integer getSessionNumber() {

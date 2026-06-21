@@ -157,7 +157,39 @@ public class PatientDetailsFrame extends JDialog {
             new SessionFormDialog(this, patientId, null, context).setVisible(true);
         });
         btnOpenReport.addActionListener(e -> {
+
             try {
+                if (reportPath == null || reportPath.isBlank()) {
+
+                    UiTheme.showInfo(
+
+                            this,
+
+                            "Report",
+
+                            "No report is attached for this patient.");
+
+                    return;
+
+                }
+
+                File reportFile = new File(reportPath);
+
+                if (!reportFile.exists()) {
+
+                    UiTheme.showInfo(
+
+                            this,
+
+                            "Report Not Found",
+
+                            "The report file could not be found.\n\n"
+
+                                    + "It may have been moved, renamed, or deleted.");
+
+                    return;
+
+                }
                 if (!reportPath.isEmpty()) {
                     logger.info("Opening report {} for patientId={}", reportPath, patientId);
                     Desktop.getDesktop().open(new java.io.File(reportPath));
@@ -293,8 +325,8 @@ public class PatientDetailsFrame extends JDialog {
         if (!reportPath.isEmpty()) {
             sb.append("(Use 'Open Report' button to view)\n");
         }
-        sb.append("Report Analysis: ").append(safe(p.getMedia())).append("\n");
-        sb.append("Allergy: ").append(safe(p.getPatientStory())).append("\n");
+        sb.append("Report Analysis: ").append(safe(p.getPatientStory())).append("\n");
+        //sb.append("Allergy: ").append(safe(p.getAllergy)).append("\n");
         sb.append("Remarks: ").append(safe(p.getRemarks())).append("\n");
         return sb.toString();
     }

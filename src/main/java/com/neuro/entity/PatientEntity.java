@@ -1,7 +1,7 @@
 package com.neuro.entity;
 
 import jakarta.persistence.*;
-
+import java.util.*;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
@@ -117,8 +117,27 @@ public class PatientEntity {
 
     @Column(name = "user_id")
     private Integer userId;
+    @OneToMany(mappedBy = "patient",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY)
+    private List<SessionEntity> sessions = new ArrayList<>();
 
     // ---------------- Getters and Setters ----------------
+    public List<SessionEntity> getSessions() {
+        return sessions;
+    }
+
+    public void setSessions(List<SessionEntity> sessions) {
+        this.sessions = sessions;
+    }
+    public void addSession(SessionEntity session) {
+
+        sessions.add(session);
+
+        session.setPatient(this);
+
+    }
 
     public Integer getPatientId() {
         return patientId;

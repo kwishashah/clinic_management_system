@@ -8,6 +8,7 @@ import com.neuro.util.HibernateUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Transaction;
+import com.neuro.entity.PatientEntity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +27,7 @@ public class HibernateSessionRepository implements SessionRepository {
                      HibernateUtil.getSessionFactory().openSession()) {
 
             List<SessionEntity> entities = session.createQuery(
-                            "FROM SessionEntity s WHERE s.patientId=:pid ORDER BY s.sessionNumber",
+                            "FROM SessionEntity s WHERE s.patient.patientId=:pid ORDER BY s.sessionNumber",
                             SessionEntity.class)
                     .setParameter("pid", patientId)
                     .getResultList();
@@ -75,7 +76,7 @@ public class HibernateSessionRepository implements SessionRepository {
                      HibernateUtil.getSessionFactory().openSession()) {
 
             Integer max = session.createQuery(
-                            "select max(s.sessionNumber) from SessionEntity s where s.patientId=:pid",
+                            "select max(s.sessionNumber) from SessionEntity s where s.patient.patientId=:pid",
                             Integer.class)
                     .setParameter("pid", patientId)
                     .uniqueResult();
@@ -116,8 +117,13 @@ public class HibernateSessionRepository implements SessionRepository {
             tx = session.beginTransaction();
 
             SessionEntity entity = new SessionEntity();
+            PatientEntity patient = session.get(
+                    PatientEntity.class,
+                    patientId
+            );
 
-            entity.setPatientId(patientId);
+            entity.setPatient(patient);
+            //entity.setPatientId(patientId);
             entity.setSessionNumber(model.sessionNumber());
             entity.setSessionDate(model.sessionDate());
             entity.setTreatment(model.treatment());

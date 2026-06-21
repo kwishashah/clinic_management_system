@@ -47,6 +47,7 @@ public class Patient {
     private String reports;
     private String media;
     private String patientStory;
+    private String allergy;
     private String remarks;
 
     private Timestamp createdAt;
@@ -325,6 +326,13 @@ public class Patient {
 
     public void setPatientStory(String patientStory) {
         this.patientStory = patientStory;
+    }
+    public String getAllergy() {
+        return allergy;
+    }
+
+    public void setAllergy(String allergy) {
+        this.allergy = allergy;
     }
 
     public String getRemarks() {

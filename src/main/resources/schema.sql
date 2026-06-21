@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS PatientHistory (
     patient_story         TEXT,
     remarks               TEXT,
     created_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_patient_user FOREIGN KEY (user_id) REFERENCES users (user_id)
+
 );
 
 -- Covering index for the paginated patient listing on the Doctor Dashboard.

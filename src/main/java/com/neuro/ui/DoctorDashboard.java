@@ -20,7 +20,8 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 public class DoctorDashboard extends JFrame {
     private JTextField txtSearchMobile;
     private JTable tblPatients;
@@ -118,6 +119,31 @@ public class DoctorDashboard extends JFrame {
         txtSearchMobile.setToolTipText(Messages.get("dashboard.search.tooltip.field"));
         searchControls.add(txtSearchMobile);
         JButton btnSearch = new JButton(Messages.get("dashboard.search.button"));
+        txtSearchMobile.getDocument().addDocumentListener(new DocumentListener() {
+
+            private void handleChange() {
+                String mobile = txtSearchMobile.getText().trim();
+
+                if (mobile.isEmpty()) {
+                    loadAllPatients(); // or whatever method loads all patients
+                }
+            }
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                handleChange();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                handleChange();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                handleChange();
+            }
+        });
         btnSearch.setMnemonic(KeyEvent.VK_S);
         btnSearch.setToolTipText(Messages.get("dashboard.search.tooltip.button"));
         searchControls.add(btnSearch);

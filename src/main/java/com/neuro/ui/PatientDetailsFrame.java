@@ -303,6 +303,7 @@ public class PatientDetailsFrame extends JDialog {
         for (int i = 0; i < labels.length && i < values.length; i++) {
             sb.append(labels[i]).append(": ").append(values[i]).append("\n");
         }
+
         for (String v : values) {
             if (v.startsWith("L4=")) {
                 sb.append("Left 4th: ").append(v.replace("L4=", "")).append("\n");
@@ -326,7 +327,7 @@ public class PatientDetailsFrame extends JDialog {
             sb.append("(Use 'Open Report' button to view)\n");
         }
         sb.append("Report Analysis: ").append(safe(p.getPatientStory())).append("\n");
-        //sb.append("Allergy: ").append(safe(p.getAllergy)).append("\n");
+
         sb.append("Remarks: ").append(safe(p.getRemarks())).append("\n");
         return sb.toString();
     }

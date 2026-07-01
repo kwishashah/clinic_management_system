@@ -298,8 +298,8 @@ public class PatientDetailsFrame extends JDialog {
         if (!reportPath.isEmpty()) {
             sb.append("(Use 'Open Report' button to view)\n");
         }
-        sb.append("Report Analysis: ").append(safe(p.getMedia())).append("\n");
-        sb.append("Allergy: ").append(safe(p.getPatientStory())).append("\n");
+        sb.append("Report Analysis: ").append(safe(p.getPatientStory())).append("\n");
+        //sb.append("Allergy: ").append(safe(p.getPatientStory())).append("\n");
         sb.append("Remarks: ").append(safe(p.getRemarks())).append("\n");
         return sb.toString();
     }

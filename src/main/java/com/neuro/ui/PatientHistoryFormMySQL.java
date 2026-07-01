@@ -31,7 +31,7 @@ public class PatientHistoryFormMySQL extends JDialog {
     /** Standard ABO + Rh blood groups; blank first entry means "not selected". */
     private static final String[] BLOOD_GROUPS = {"", "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"};
     private JTextArea txtAddress, txtMainDisease, txtComplications;
-    private JTextArea txtSymptoms, txtAllergy, txtRemarks;
+    private JTextArea txtSymptoms, txtRemarks;
     private JTextArea txtPreviousTreatment, txtMedicines, txtDetailedHistory;
     private JTextArea txtExamination, txtReportAnalysis;
 
@@ -92,7 +92,7 @@ public class PatientHistoryFormMySQL extends JDialog {
         txtDetailedHistory = createArea();
         txtExamination = createArea();
         txtReportAnalysis = createArea();
-        txtAllergy = createArea();
+        //txtAllergy = createArea();
         txtRemarks = createArea();
         txtReportPath = new JTextField(20);
         txtReportPath.setEditable(false);
@@ -164,7 +164,7 @@ public class PatientHistoryFormMySQL extends JDialog {
         enableEnterFocus(txtDetailedHistory);
         enableEnterFocus(txtExamination);
         enableEnterFocus(txtReportAnalysis);
-        enableEnterFocus(txtAllergy);
+        //enableEnterFocus(txtAllergy);
         enableEnterFocus(txtRemarks);
         enableEnterFocus(txtBP);
         enableEnterFocus(txtPulse);
@@ -329,7 +329,7 @@ public class PatientHistoryFormMySQL extends JDialog {
         uploadPanel.add(btnUploadReport, BorderLayout.EAST);
         h = addRow(historyPanel, hgbc, h, "Upload Report", uploadPanel);
         h = addRow(historyPanel, hgbc, h, "Report Analysis", txtReportAnalysis);
-        h = addRow(historyPanel, hgbc, h, "Allergy", txtAllergy);
+       // h = addRow(historyPanel, hgbc, h, "Allergy", txtAllergy);
         h = addRow(historyPanel, hgbc, h, "Remarks", txtRemarks);
         addVerticalFiller(historyPanel, hgbc, h);
         return historyPanel;
@@ -432,7 +432,7 @@ public class PatientHistoryFormMySQL extends JDialog {
         JTextArea[] areas = {
             txtAddress, txtMainDisease, txtComplications, txtSymptoms,
             txtPreviousTreatment, txtMedicines, txtDetailedHistory,
-            txtExamination, txtReportAnalysis, txtAllergy, txtRemarks
+            txtExamination, txtReportAnalysis,  txtRemarks
         };
         for (JTextArea a : areas) {
             a.setBackground(FORM_BG);

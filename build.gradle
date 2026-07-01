@@ -1,0 +1,95 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.guardsquare:proguard-gradle:7.6.1'
+    }
+}
+
+plugins {
+    id 'java'
+    alias(libs.plugins.shadow)
+}
+
+repositories {
+    mavenCentral()
+}
+
+import proguard.gradle.ProGuardTask
+
+dependencies {
+    implementation libs.bundles.dependencies
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+// 1. Compile your custom code into a clean, un-shaded raw application JAR
+jar {
+    archiveClassifier.set('raw')
+    manifest {
+        attributes(
+                'Main-Class': 'com.neuro.application.NeuroApplication'
+        )
+    }
+}
+
+// 2. Obfuscate ONLY your custom application code
+tasks.register('obfuscate', ProGuardTask) {
+    dependsOn jar // Compiles the code before starting obfuscation
+
+    def jmodsDir = "${System.getProperty('java.home')}/jmods"
+
+    // FIX: Read your fresh application classes from the 'jar' task output
+    injars jar.archiveFile
+    outjars "${projectDir}/build/libs/${rootProject.name}-obfuscated.jar"
+
+    // FIX: Provide dependencies so ProGuard can inspect references safely
+    libraryjars configurations.compileClasspath
+
+    // Java System Modules
+    libraryjars "${jmodsDir}/java.base.jmod"
+    libraryjars "${jmodsDir}/java.desktop.jmod"
+    libraryjars "${jmodsDir}/java.sql.jmod"
+    libraryjars "${jmodsDir}/java.naming.jmod"
+    libraryjars "${jmodsDir}/java.logging.jmod"
+    libraryjars "${jmodsDir}/java.xml.jmod"
+    libraryjars "${jmodsDir}/java.management.jmod"
+    libraryjars "${jmodsDir}/java.instrument.jmod"
+    libraryjars "${jmodsDir}/java.compiler.jmod"
+    libraryjars "${jmodsDir}/java.datatransfer.jmod"
+    libraryjars "${jmodsDir}/java.prefs.jmod"
+    libraryjars "${jmodsDir}/java.rmi.jmod"
+
+    configuration file('proguard-rules.pro')
+}
+
+// 3. Assemble everything (Obfuscated Code + Unmodified Hibernate/MySQL Libs) into the Fat JAR
+shadowJar {
+    dependsOn obfuscate // Assembles only after obfuscation finishes successfully
+
+    archiveBaseName.set("${rootProject.name}")
+    archiveClassifier.set('fat')
+
+    // FIX: Pull in your freshly scrambled classes instead of the raw classes
+    from(zipTree(file("${projectDir}/build/libs/${rootProject.name}-obfuscated.jar")))
+
+    // 🟢 CORRECTED: Pull in your freshly scrambled classes cleanly
+    from(zipTree(file("${projectDir}/build/libs/${rootProject.name}-obfuscated.jar")))
+
+    // 🟢 CORRECTED: Removed the 'exclude "com/neuro/application/**"' line completely!
+
+
+    manifest {
+        attributes(
+                'Main-Class': 'com.neuro.application.NeuroApplication'
+        )
+    }
+
+    // Merges META-INF/services files cleanly so Hibernate boots properly
+    mergeServiceFiles()
+}

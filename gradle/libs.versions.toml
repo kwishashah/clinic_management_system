@@ -1,0 +1,35 @@
+[versions]
+mysql = "8.0.33"
+hibernate = "6.5.3.Final"
+jakarta-persistence = "3.1.0"
+pdfbox = "2.0.29"
+jbcrypt = "0.4"
+shadow = "8.3.6"
+log4j = "2.23.1"
+junit = "5.10.2"
+
+[libraries]
+mysql-connector = { group = "com.mysql", name = "mysql-connector-j", version.ref = "mysql" }
+hibernate-core = { group = "org.hibernate.orm", name = "hibernate-core", version.ref = "hibernate" }
+jakarta-persistence = { group = "jakarta.persistence", name = "jakarta.persistence-api", version.ref = "jakarta-persistence" }
+pdfbox = { group = "org.apache.pdfbox", name = "pdfbox", version.ref = "pdfbox" }
+jbcrypt = { group = "org.mindrot", name = "jbcrypt", version.ref = "jbcrypt" }
+log4j-api = { group = "org.apache.logging.log4j", name = "log4j-api", version.ref = "log4j" }
+log4j-core = { group = "org.apache.logging.log4j", name = "log4j-core", version.ref = "log4j" }
+log4j-slf4j-impl = { group = "org.apache.logging.log4j", name = "log4j-slf4j2-impl", version.ref = "log4j" }
+junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junit" }
+
+[bundles]
+# You can group these together to import them all with a single line!
+dependencies = [
+    "mysql-connector",
+    "hibernate-core",
+    "jakarta-persistence",
+    "pdfbox",
+    "jbcrypt",
+    "log4j-api",
+    "log4j-core"
+]
+
+[plugins]
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }

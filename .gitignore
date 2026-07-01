@@ -1,12 +1,7 @@
 # Build output
-target/classes
-target/db.properties
-target/**
+build/**
 *.class
 *.jar
-!tools/yguard.jar
-!tools/asm-9.6.jar
-
 # IDE / editor files
 *.iml
 .idea/
@@ -14,10 +9,8 @@ target/**
 
 # Logs
 *.log
-
 # Local configuration / credentials
 config.properties
-
 # MacOS system files
 .DS_Store
-/target/
+/build/

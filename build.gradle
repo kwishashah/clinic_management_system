@@ -65,7 +65,7 @@ tasks.register('obfuscate', ProGuardTask) {
     libraryjars "${jmodsDir}/java.prefs.jmod"
     libraryjars "${jmodsDir}/java.rmi.jmod"
 
-    configuration file('proguard-rules.pro')
+    configuration file('proguard-rules-1.pro')
 }
 
 // 3. Assemble everything (Obfuscated Code + Unmodified Hibernate/MySQL Libs) into the Fat JAR

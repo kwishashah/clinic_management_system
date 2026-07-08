@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="maven-antrun-" default="main">
+  <target name="main">
+    <taskdef classname="com.yworks.yguard.YGuardTask" name="yguard">
+      <classpath>
+        <pathelement location="/Users/kwisha/Desktop/clinic_management_system/tools/yguard.jar" />
+        <pathelement location="/Users/kwisha/Desktop/clinic_management_system/tools/asm-9.6.jar" />
+      </classpath>
+    </taskdef>
+    <yguard>
+      <inoutpair in="/Users/kwisha/Desktop/clinic_management_system/target/Dashboard.jar" out="/Users/kwisha/Desktop/clinic_management_system/target/Dashboard-1.1.0-20260630-155753.jar" />
+      <rename mainclass="com.neuro.application.NeuroApplication" logfile="/Users/kwisha/Desktop/clinic_management_system/target/yguard-rename.log">
+        <keep>
+          <class methods="public" name="com.neuro.application.NeuroApplication" fields="none" />
+          <class implements="java.lang.Throwable" methods="public" fields="public" />
+          <class methods="public" name="com.neuro.model.ClinicInfo" fields="public" />
+          <class methods="public" name="com.neuro.model.Patient" fields="public" />
+          <class methods="public" name="com.neuro.model.PatientColumns" fields="public" />
+          <class methods="private" classes="private" fields="private">
+            <patternset>
+              <include name="com.mysql.**" />
+              <include name="org.slf4j.**" />
+              <include name="org.apache.logging.log4j.**" />
+              <include name="org.apache.pdfbox.**" />
+              <include name="org.apache.fontbox.**" />
+            </patternset>
+          </class>
+        </keep>
+      </rename>
+    </yguard>
+    <echo message="Release JAR: /Users/kwisha/Desktop/clinic_management_system/target/Dashboard-1.1.0-20260630-155753.jar" />
+  </target>
+</project>
